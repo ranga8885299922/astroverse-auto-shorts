@@ -2,7 +2,7 @@ name: Astroverse Daily Shorts
 
 on:
   schedule:
-    - cron: "0 3 * * *"   # 3:00 AM UTC = 6:00 AM IST every day
+    - cron: "0 0 * * *"   # 3:00 AM UTC = 6:00 AM IST every day
   workflow_dispatch:        # Manual trigger from GitHub UI
 
 jobs:
