@@ -1,0 +1,18 @@
+# Credentials — NEVER commit these
+credentials/token.pickle
+credentials/client_secret.json
+credentials/token_b64.txt
+
+# Temp output
+output/
+*.wav
+*.mp4
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Logs (optional — remove this line if you want to track logs in git)
+# logs/

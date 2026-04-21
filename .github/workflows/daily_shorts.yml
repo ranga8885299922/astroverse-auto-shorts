@@ -1,0 +1,52 @@
+name: Astroverse Daily Shorts
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 3:00 AM UTC = 6:00 AM IST every day
+  workflow_dispatch:        # Manual trigger from GitHub UI
+
+jobs:
+  run-shorts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y imagemagick ffmpeg fonts-noto fonts-noto-cjk
+          sudo sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@*"/' \
+            /etc/ImageMagick-6/policy.xml || true
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Restore credentials
+        run: |
+          mkdir -p credentials
+          echo '${{ secrets.CLIENT_SECRET_JSON }}' > credentials/client_secret.json
+          echo '${{ secrets.TOKEN_PICKLE_B64 }}'   | base64 --decode > credentials/token.pickle
+
+      - name: Run Astroverse automation
+        env:
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          SARVAM_API_KEY:     ${{ secrets.SARVAM_API_KEY }}
+          USE_THEME_ROTATION: "true"
+        run: python main.py
+
+      - name: Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-log-${{ github.run_id }}
+          path: logs/run_log.csv
+          retention-days: 30

@@ -1,0 +1,95 @@
+[notice] A new release of pip is available: 25.0.1 -> 26.0.1
+
+[notice] To update, run: C:\Users\kyin\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\python.exe -m pip install --upgrade pip
+
+[2/3] Running Astroverse...
+
+     (A browser window will open - sign in with ranga8885299922@gmail.com)
+
+     (Click Allow when asked for YouTube permissions)
+
+============================================================
+
+  🔮  ASTROVERSE AUTO-SHORTS
+
+  Date : 2026-04-20
+
+============================================================
+
+  Theme : Monday motivation & new beginnings
+
+[1/4] Generating scripts via Gemini...
+
+  → Batch 1/12 (Aries)...
+
+Traceback (most recent call last):
+
+  File "C:\Astroverse\astroverse-auto-shorts\main.py", line 145, in <module>
+
+    main()
+
+  File "C:\Astroverse\astroverse-auto-shorts\main.py", line 71, in main
+
+    items = generate_scripts(config)
+
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "C:\Astroverse\astroverse-auto-shorts\generate_script.py", line 153, in generate_scripts
+
+    results = _call_groq(client, batch, languages, theme, tone)
+
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "C:\Astroverse\astroverse-auto-shorts\generate_script.py", line 86, in _call_groq
+
+    response = client.chat.completions.create(
+
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "C:\Users\kyin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\groq\resources\chat\completions.py", line 461, in create
+
+    return self._post(
+
+           ^^^^^^^^^^^
+
+  File "C:\Users\kyin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\groq\_base_client.py", line 1284, in post
+
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "C:\Users\kyin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\groq\_base_client.py", line 1071, in request
+
+    raise self._make_status_error_from_response(err.response) from None
+
+groq.APIStatusError: Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01kpjybqvrfh69db412av1weba` service tier `on_demand` on tokens per minute (TPM): Limit 12000, Requested 12876, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+
+[3/3] Done! Check logs/run_log.csv for results.
+
+============================================
+
+ IMPORTANT - DO THIS NEXT:
+
+ 1. Open credentials folder
+
+ 2. You will see a new file: token.pickle
+
+ 3. Run this command to encode it:
+
+    certutil -encode credentials\token.pickle credentials\token_b64.txt
+
+ 4. Open token_b64.txt and copy ALL contents
+
+ 5. Paste it as GitHub Secret: TOKEN_PICKLE_B64
+
+============================================
+
+Press any key to continue . . .
+
+C:\Astroverse\astroverse-auto-shorts>
+
+
+
+
+
+adjust the prompt most effectively, to cover very importent things with in allowed legnth but message should be meaningfull and have information

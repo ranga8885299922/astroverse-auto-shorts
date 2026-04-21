@@ -1,0 +1,333 @@
+date,run_id,sign,language,status,video_id,error
+2026-04-19,local,Aries,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Taurus,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Gemini,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Cancer,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Leo,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Virgo,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Libra,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Scorpio,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Sagittarius,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Capricorn,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aquarius,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Hindi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Tamil,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Kannada,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Bengali,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Pisces,Marathi,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-19,local,Aries,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Taurus,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Gemini,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Cancer,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aries,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Taurus,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Gemini,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Cancer,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aries,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Taurus,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Gemini,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Cancer,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aries,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Taurus,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Gemini,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Cancer,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aries,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Taurus,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Gemini,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Cancer,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aries,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Taurus,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Gemini,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Cancer,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Leo,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Leo,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Leo,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Leo,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Leo,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Leo,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Virgo,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Virgo,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Virgo,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Virgo,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Virgo,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Virgo,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Libra,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Libra,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Libra,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Libra,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Libra,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Libra,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Scorpio,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Scorpio,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Scorpio,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Scorpio,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Scorpio,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Scorpio,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Sagittarius,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Capricorn,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aquarius,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Pisces,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Sagittarius,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Capricorn,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aquarius,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Pisces,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Sagittarius,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Capricorn,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aquarius,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Pisces,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Sagittarius,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Capricorn,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aquarius,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Pisces,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Sagittarius,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Capricorn,Marathi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aquarius,Telugu,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Pisces,Hindi,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Sagittarius,Tamil,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Capricorn,Kannada,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-19,local,Aquarius,Bengali,FAILED,,'VideoFileClip' object has no attribute 'subclip'
+2026-04-20,local,Aries,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Taurus,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Gemini,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Cancer,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aries,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Taurus,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Gemini,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Cancer,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aries,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Taurus,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Gemini,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Cancer,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aries,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Taurus,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Gemini,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Cancer,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aries,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Taurus,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Gemini,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Cancer,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aries,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Taurus,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Gemini,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Cancer,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Leo,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Virgo,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Libra,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Scorpio,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Leo,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Virgo,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Libra,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Scorpio,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Leo,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Virgo,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Libra,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Scorpio,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Leo,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Virgo,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Libra,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Scorpio,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Leo,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Virgo,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Libra,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Scorpio,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Leo,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Virgo,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Libra,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Scorpio,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Sagittarius,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Capricorn,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aquarius,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Pisces,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Sagittarius,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Capricorn,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aquarius,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Pisces,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Sagittarius,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Capricorn,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aquarius,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Pisces,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Sagittarius,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Capricorn,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aquarius,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Pisces,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Sagittarius,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Capricorn,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aquarius,Telugu,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Pisces,Hindi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Sagittarius,Tamil,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Capricorn,Kannada,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aquarius,Bengali,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Pisces,Marathi,FAILED,,"Invalid font Arial, pillow failed to use it with error cannot open resource"
+2026-04-20,local,Aries,Telugu,SUCCESS,ui5H6v7OJTQ,
+2026-04-20,local,Taurus,Telugu,SUCCESS,4vcMkNqOpQg,
+2026-04-20,local,Gemini,Telugu,SUCCESS,XJaw08XF0xQ,
+2026-04-20,local,Cancer,Telugu,SUCCESS,-Oi9kc2UC7U,
+2026-04-20,local,Leo,Telugu,SUCCESS,nI3JAXmBlOU,
+2026-04-20,local,Virgo,Telugu,SUCCESS,Q0jG_eZ08pE,
+2026-04-20,local,Libra,Telugu,SUCCESS,b81Z1wz8fUE,
+2026-04-20,local,Scorpio,Telugu,SUCCESS,gVrY3xUGWlo,
+2026-04-20,local,Sagittarius,Telugu,SUCCESS,34UvZojhUTU,
+2026-04-20,local,Capricorn,Telugu,SUCCESS,YPFzQZM7mpI,
+2026-04-20,local,Aquarius,Telugu,SUCCESS,80OFVuAbHy8,
+2026-04-21,local,Aries,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Taurus,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Gemini,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Cancer,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Leo,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Virgo,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Libra,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Scorpio,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Sagittarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Capricorn,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Aquarius,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Pisces,Telugu,FAILED,,400 Client Error: Bad Request for url: https://api.sarvam.ai/text-to-speech
+2026-04-21,local,Aries,Telugu,SUCCESS,eSdWOfjXuhA,
+2026-04-21,local,Taurus,Telugu,SUCCESS,UT2iIVutJt0,
+2026-04-21,local,Gemini,Telugu,SUCCESS,L7DdCYyUYXw,
+2026-04-21,local,Cancer,Telugu,SUCCESS,8K3ndFy5zvY,
+2026-04-21,local,Leo,Telugu,SUCCESS,zRfSCKfHaX8,
+2026-04-21,local,Virgo,Telugu,SUCCESS,zZ133_uS99M,
+2026-04-21,local,Libra,Telugu,SUCCESS,qsnHwyBaw58,
+2026-04-21,local,Scorpio,Telugu,SUCCESS,TxlDxhDl_b0,
+2026-04-21,local,Sagittarius,Telugu,SUCCESS,XczbAH5j7j8,
+2026-04-21,local,Capricorn,Telugu,SUCCESS,CBnMXtBKQJ8,
+2026-04-21,local,Aries,Telugu,SUCCESS,ETr0roQpBoA,
+2026-04-21,local,Taurus,Telugu,SUCCESS,d6sm0q7rh3s,
+2026-04-21,local,Gemini,Telugu,SUCCESS,AP1cRVO3--Q,
+2026-04-21,local,Cancer,Telugu,SUCCESS,Y6MgozGMyjc,
+2026-04-21,local,Leo,Telugu,SUCCESS,Rxod40rjHmc,
+2026-04-21,local,Virgo,Telugu,SUCCESS,hqK-oRGRlc4,
+2026-04-21,local,Libra,Telugu,SUCCESS,fHOFremGYCA,
+2026-04-21,local,Scorpio,Telugu,SUCCESS,wmyjje9Jo9A,
+2026-04-21,local,Sagittarius,Telugu,SUCCESS,DKsI28VP4Os,
+2026-04-21,local,Capricorn,Telugu,SUCCESS,GAcudW5PocE,
+2026-04-21,local,Aquarius,Telugu,SUCCESS,cbtqQR4BHus,
+2026-04-21,local,Pisces,Telugu,SUCCESS,B5PNPpbR3ZU,
