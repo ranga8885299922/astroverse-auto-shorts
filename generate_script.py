@@ -2,29 +2,60 @@ import json
 import os
 import time
 import datetime
+from zoneinfo import ZoneInfo
 from groq import Groq
 
-PROMO_TELUGU = "Vyaktiga mee rashiki sambandhinchina prashnalanki samadhana kosam, channel description lo unna Astroverse app link download chesukondi. Mee jeevitam lo velugu teche jyotishyam ippudu mee chetilo undi."
-PROMO_TENGLISH = "Vyaktiga mee rashiki sambandhinchina prashnalanki samadhana kosam, channel description lo unna Astroverse app link download chesukondi."
+PROMO_TELUGU = "వ్యక్తిగత రాశి సందేహాల కోసం, చానల్ డిస్క్రిప్షన్ లో ఉన్న Astroverse యాప్ లింక్ డౌన్లోడ్ చేసుకోండి."
+PROMO_DISPLAY = "Vyaktigata rashi sandehala kosam, channel description lo unna Astroverse app link download chesukondi."
+
+RASI_TELUGU = {
+    "Aries":       "మేష రాశి",
+    "Taurus":      "వృషభ రాశి",
+    "Gemini":      "మిథున రాశి",
+    "Cancer":      "కర్కాటక రాశి",
+    "Leo":         "సింహ రాశి",
+    "Virgo":       "కన్యా రాశి",
+    "Libra":       "తుల రాశి",
+    "Scorpio":     "వృశ్చిక రాశి",
+    "Sagittarius": "ధనుస్సు రాశి",
+    "Capricorn":   "మకర రాశి",
+    "Aquarius":    "కుంభ రాశి",
+    "Pisces":      "మీన రాశి",
+}
+
+SIGN_SYMBOLS = {
+    "Aries": "♈", "Taurus": "♉", "Gemini": "♊", "Cancer": "♋",
+    "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Scorpio": "♏",
+    "Sagittarius": "♐", "Capricorn": "♑", "Aquarius": "♒", "Pisces": "♓"
+}
+
+
+def _get_ist_date():
+    ist_now = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
+    return ist_now.strftime("%B %d, %Y"), ist_now.strftime("%b %d %Y")
 
 
 def _call_groq(client, sign, languages, theme, tone) -> list[dict]:
-    today      = datetime.date.today().strftime("%B %d, %Y")
-    date_short = datetime.date.today().strftime("%b %d %Y")
-    lang       = languages[0]
+    today, date_short = _get_ist_date()
+    lang = languages[0]
+    rasi_telugu = RASI_TELUGU.get(sign, sign)
+    symbol = SIGN_SYMBOLS.get(sign, "🔮")
 
-    prompt = f"""Vedic astrologer. For {sign} rashi on {today}, write horoscope.
+    prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}.
 
-Return ONLY this JSON object (no extra text before or after):
+Return ONLY this JSON object. Start with {{ end with }}. No text outside JSON:
 {{
   "sign": "{sign}",
+  "rasi_telugu": "{rasi_telugu}",
   "language": "{lang['name']}",
   "language_code": "{lang['code']}",
-  "script_telugu": "Pure Telugu unicode. 250 words. Cover: active planet, career/money, love/family, health, 1 risk + remedy/prayer, lucky color+number, blessing.",
-  "script_display": "Same content in Tenglish (Telugu words in English letters). 250 words.",
-  "title_en": "{sign} - {date_short} | {lang['name']} Daily Horoscope"
+  "title_telugu": "{symbol} {rasi_telugu} - {date_short}",
+  "script_telugu": "Write 250 word horoscope in pure Telugu script (తెలుగు). Include: todays active planet name, career advice, money guidance, love and family, health tip, one risk with specific prayer remedy, lucky color and number, closing blessing.",
+  "script_display": "Write SAME content in Tenglish (Telugu words spelled in English letters only, no English words). 250 words.",
+  "title_en": "{sign} - {date_short} | Telugu Daily Horoscope"
 }}"""
 
+    last_error = None
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
@@ -32,65 +63,66 @@ Return ONLY this JSON object (no extra text before or after):
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a Vedic astrologer. Return ONLY a raw JSON object. No text before or after the JSON. Start your response with { and end with }."
+                        "content": "You are a Vedic astrologer. Return ONLY a raw JSON object. Start with { end with }. No markdown. No text before or after JSON."
                     },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "user", "content": prompt}
                 ],
-                temperature=0.8,
-                max_tokens=4000,
+                temperature=0.7,
+                max_tokens=3500,
             )
-            break
+
+            raw = response.choices[0].message.content.strip()
+
+            # Strip markdown fences if present
+            if "```" in raw:
+                for part in raw.split("```"):
+                    part = part.strip()
+                    if part.startswith("json"):
+                        part = part[4:].strip()
+                    if part.startswith("{"):
+                        raw = part
+                        break
+
+            # Find JSON boundaries
+            start = raw.find("{")
+            end   = raw.rfind("}") + 1
+            if start == -1 or end <= 1:
+                raise ValueError(f"No JSON object found in response")
+
+            obj = json.loads(raw[start:end])
+
+            # Validate required keys exist
+            required = ["sign", "script_telugu", "script_display", "title_en"]
+            for key in required:
+                if key not in obj or not obj[key]:
+                    raise ValueError(f"Missing or empty key: {key}")
+
+            # Append promo
+            obj["script"]         = obj["script_telugu"] + " " + PROMO_TELUGU
+            obj["script_display"] = obj["script_display"] + " " + PROMO_DISPLAY
+            obj["rasi_telugu"]    = obj.get("rasi_telugu", RASI_TELUGU.get(sign, sign))
+            obj["title_telugu"]   = obj.get("title_telugu", f"{symbol} {RASI_TELUGU.get(sign, sign)} - {date_short}")
+
+            return [obj]
+
+        except json.JSONDecodeError as e:
+            last_error = f"JSON parse error: {e}"
+            print(f"        Attempt {attempt+1} failed: {last_error}")
+            time.sleep(5)
+        except ValueError as e:
+            last_error = str(e)
+            print(f"        Attempt {attempt+1} failed: {last_error}")
+            time.sleep(5)
         except Exception as e:
-            if "429" in str(e) and attempt < 2:
-                print(f"        Rate limit, waiting 70s...")
-                time.sleep(70)
+            if "429" in str(e):
+                wait = 70
+                print(f"        Rate limit hit, waiting {wait}s...")
+                time.sleep(wait)
+                last_error = str(e)
             else:
                 raise
 
-    raw = response.choices[0].message.content.strip()
-
-    # Strip markdown fences
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.strip()
-
-    # Find JSON object boundaries
-    start = raw.find("{")
-    end   = raw.rfind("}") + 1
-
-    if start == -1:
-        raise ValueError(f"No JSON found. Got: {raw[:200]}")
-
-    # If closing brace missing (truncated), attempt repair
-    if end <= 1:
-        print(f"  ⚠ Response truncated, attempting repair...")
-        raw = raw[start:] + '"}'
-        end = len(raw)
-
-    try:
-        obj = json.loads(raw[start:end])
-    except json.JSONDecodeError:
-        # Try to repair by finding last complete key-value
-        chunk = raw[start:end]
-        last_comma = chunk.rfind('",')
-        if last_comma > 0:
-            repaired = chunk[:last_comma+1] + '"dummy":"x"}'
-            try:
-                obj = json.loads(repaired)
-            except:
-                raise ValueError(f"Cannot parse JSON. Raw: {chunk[:300]}")
-        else:
-            raise
-
-    obj["script"]         = obj.get("script_telugu", "") + " " + PROMO_TELUGU
-    obj["script_display"] = obj.get("script_display", "") + " " + PROMO_TENGLISH
-
-    return [obj]
+    raise RuntimeError(f"Failed after 3 attempts for {sign}. Last error: {last_error}")
 
 
 def generate_scripts(config: dict) -> list[dict]:
@@ -101,7 +133,6 @@ def generate_scripts(config: dict) -> list[dict]:
     tone      = config["tone"]
 
     all_scripts = []
-
     for i, sign in enumerate(signs, 1):
         print(f"  → Sign {i}/{len(signs)}: {sign}...")
         results = _call_groq(client, sign, languages, theme, tone)
