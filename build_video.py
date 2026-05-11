@@ -4,251 +4,240 @@ import os
 import datetime
 import urllib.request
 from zoneinfo import ZoneInfo
+from PIL import Image, ImageDraw
+import numpy as np
 
 try:
     from moviepy import (
-        VideoFileClip, ImageClip, AudioFileClip,
-        TextClip, CompositeVideoClip, concatenate_videoclips,
-        ColorClip,
+        ImageClip, AudioFileClip, TextClip,
+        CompositeVideoClip, ColorClip,
     )
 except ImportError:
     from moviepy.editor import (
-        VideoFileClip, ImageClip, AudioFileClip,
-        TextClip, CompositeVideoClip, concatenate_videoclips,
-        ColorClip,
+        ImageClip, AudioFileClip, TextClip,
+        CompositeVideoClip, ColorClip,
     )
 
-# ── Font paths ────────────────────────────────────────────────────────────────
-TELUGU_FONT_URL = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansTelugu/NotoSansTelugu-Regular.ttf"
-TELUGU_FONT_PATH = "fonts/NotoSansTelugu-Regular.ttf"
+TELUGU_FONT_URL      = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansTelugu/NotoSansTelugu-Regular.ttf"
+TELUGU_FONT_BOLD_URL = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansTelugu/NotoSansTelugu-Bold.ttf"
+TELUGU_FONT_PATH     = "fonts/NotoSansTelugu-Regular.ttf"
+TELUGU_BOLD_PATH     = "fonts/NotoSansTelugu-Bold.ttf"
 
-def ensure_telugu_font():
-    """Download Telugu font if not present."""
-    if not os.path.exists("fonts"):
-        os.makedirs("fonts")
-    if not os.path.exists(TELUGU_FONT_PATH):
-        print("  Downloading Telugu font...")
-        try:
-            urllib.request.urlretrieve(TELUGU_FONT_URL, TELUGU_FONT_PATH)
-            print("  ✓ Telugu font downloaded")
-        except Exception as e:
-            print(f"  ⚠ Telugu font download failed: {e}")
-            return None
-    return TELUGU_FONT_PATH
+def ensure_fonts():
+    os.makedirs("fonts", exist_ok=True)
+    for url, path in [(TELUGU_FONT_URL, TELUGU_FONT_PATH),
+                      (TELUGU_FONT_BOLD_URL, TELUGU_BOLD_PATH)]:
+        if not os.path.exists(path):
+            try:
+                print(f"  Downloading font: {path}")
+                urllib.request.urlretrieve(url, path)
+            except Exception as e:
+                print(f"  Font download failed: {e}")
 
-
-def find_font(preferred_names):
-    search_dirs = [
-        r"C:\Windows\Fonts",
-        os.path.expanduser(r"~\AppData\Local\Microsoft\Windows\Fonts"),
-        "/usr/share/fonts/truetype/msttcorefonts",
-        "/usr/share/fonts/truetype/dejavu",
-        "/usr/share/fonts/truetype/noto",
-        "/usr/share/fonts/truetype",
-        "/usr/share/fonts",
-        "/usr/local/share/fonts",
-    ]
-    for name in preferred_names:
-        for d in search_dirs:
-            for candidate in [os.path.join(d, name), os.path.join(d, name.lower())]:
-                if os.path.isfile(candidate):
-                    return candidate
+def find_font(names):
+    dirs = [r"C:\Windows\Fonts","/usr/share/fonts/truetype/msttcorefonts",
+            "/usr/share/fonts/truetype/dejavu","/usr/share/fonts/truetype",
+            "/usr/share/fonts"]
+    for n in names:
+        for d in dirs:
+            p = os.path.join(d, n)
+            if os.path.isfile(p):
+                return p
     return None
 
+FONT_REGULAR = find_font(["arial.ttf","Arial.ttf","DejaVuSans.ttf","FreeSans.ttf"])
+FONT_BOLD    = find_font(["arialbd.ttf","Arial Bold.ttf","DejaVuSans-Bold.ttf","FreeSansBold.ttf"])
 
-FONT_REGULAR = find_font(["arial.ttf", "Arial.ttf", "DejaVuSans.ttf", "FreeSans.ttf"])
-FONT_BOLD    = find_font(["arialbd.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf", "FreeSansBold.ttf"])
-FONT_SIGN    = FONT_BOLD    or FONT_REGULAR
-FONT_CAPTION = FONT_REGULAR or FONT_SIGN
-
-NUM_PARTS = 6
+NUM_PARTS        = 6
+HIGHLIGHT_SECS   = 5  # First 5 seconds show highlight
 
 SIGN_SYMBOLS = {
-    "Aries": "♈", "Taurus": "♉", "Gemini": "♊", "Cancer": "♋",
-    "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Scorpio": "♏",
-    "Sagittarius": "♐", "Capricorn": "♑", "Aquarius": "♒", "Pisces": "♓"
+    "Aries":"♈","Taurus":"♉","Gemini":"♊","Cancer":"♋",
+    "Leo":"♌","Virgo":"♍","Libra":"♎","Scorpio":"♏",
+    "Sagittarius":"♐","Capricorn":"♑","Aquarius":"♒","Pisces":"♓"
 }
 
+def make_orange_bg(W, H):
+    img  = Image.new("RGB", (W, H))
+    draw = ImageDraw.Draw(img)
+    for y in range(H):
+        r = y / H
+        R = int(220 + (160-220)*r)
+        G = int(80  + (120-80) *r)
+        B = int(20  + (0  -20) *r)
+        draw.line([(0,y),(W,y)], fill=(R,G,B))
+    return np.array(img)
 
-def split_script_into_parts(script: str, num_parts: int = NUM_PARTS) -> list[str]:
+def split_script(script, num_parts=NUM_PARTS):
     words = script.split()
     total = len(words)
     size  = max(1, total // num_parts)
     parts = []
     for i in range(num_parts):
-        start   = i * size
-        end     = start + size if i < num_parts - 1 else total
-        chunk   = " ".join(words[start:end])
-        wrapped = "\n".join(textwrap.wrap(chunk, width=30))
-        parts.append(wrapped)
+        s = i * size
+        e = s + size if i < num_parts - 1 else total
+        parts.append("\n".join(textwrap.wrap(" ".join(words[s:e]), width=20)))
     return parts
-
 
 def make_text(text, font_path, font_size, color, width, position, duration,
               stroke_color="black", stroke_width=2, method="caption", start=0):
-    kwargs = dict(
-        text         = text,
-        font_size    = font_size,
-        color        = color,
-        stroke_color = stroke_color,
-        stroke_width = stroke_width,
-    )
+    kw = dict(text=text, font_size=font_size, color=color,
+              stroke_color=stroke_color, stroke_width=stroke_width)
     if font_path:
-        kwargs["font"] = font_path
+        kw["font"] = font_path
     if method == "caption":
-        kwargs["method"]     = "caption"
-        kwargs["size"]       = (width, None)
-        kwargs["text_align"] = "center"
-
-    clip = TextClip(**kwargs).with_duration(duration)
+        kw["method"]     = "caption"
+        kw["size"]       = (width, None)
+        kw["text_align"] = "center"
+    clip = TextClip(**kw).with_duration(duration)
     if start > 0:
         clip = clip.with_start(start)
     return clip.with_position(position, relative=True)
 
+def build_video(item, audio_path, config, out_dir):
+    ensure_fonts()
+    vc   = config["video"]
+    W, H = vc["width"], vc["height"]
 
-def build_video(item: dict, audio_path: str, config: dict, out_dir: str) -> str:
-    vc       = config["video"]
-    W        = vc["width"]
-    H        = vc["height"]
+    # Tomorrow's date for display
+    ist_now    = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
+    tomorrow   = ist_now + datetime.timedelta(days=1)
+    date_str   = tomorrow.strftime("%b %d %Y")
 
-    # Get IST date
-    ist_now  = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    date_str = ist_now.strftime("%b %d %Y")
+    symbol          = SIGN_SYMBOLS.get(item["sign"], "🔮")
+    rasi            = item.get("rasi_telugu", item["sign"])
+    highlight_text  = item.get("highlight_telugu", rasi)
 
-    symbol      = SIGN_SYMBOLS.get(item["sign"], "🔮")
-    rasi_telugu = item.get("rasi_telugu", item["sign"])
+    # Telugu fonts
+    tel_bold = TELUGU_BOLD_PATH    if os.path.exists(TELUGU_BOLD_PATH)  else \
+               TELUGU_FONT_PATH    if os.path.exists(TELUGU_FONT_PATH)  else FONT_BOLD
+    tel_reg  = TELUGU_FONT_PATH    if os.path.exists(TELUGU_FONT_PATH)  else FONT_REGULAR
 
-    # Ensure Telugu font available
-    telugu_font = ensure_telugu_font()
-    if not telugu_font:
-        telugu_font = FONT_REGULAR  # fallback
-
-    # ── Audio ─────────────────────────────────────────────────────────────────
     audio = AudioFileClip(audio_path)
     dur   = audio.duration
 
-    # ── Background ────────────────────────────────────────────────────────────
-    bg_path = vc["background_file"]
-    if bg_path.lower().endswith((".mp4", ".mov", ".avi")):
-        bg = VideoFileClip(bg_path).without_audio()
-        if bg.duration < dur:
-            loops = int(dur / bg.duration) + 2
-            bg = concatenate_videoclips([bg] * loops)
-        bg = bg.subclipped(0, dur).resized((W, H))
-    else:
-        bg = ImageClip(bg_path).with_duration(dur).resized((W, H))
-
+    bg    = ImageClip(make_orange_bg(W, H)).with_duration(dur)
     layers = [bg]
 
-    # ════════════════════════════════════════════════════════
-    # TOP SECTION — Date (big, bright, first thing seen)
-    # ════════════════════════════════════════════════════════
-    top_bar = (ColorClip(size=(W, int(H * 0.20)), color=(0, 0, 0))
-               .with_opacity(0.65).with_duration(dur).with_position((0, 0)))
-    layers.append(top_bar)
+    # ═══════════════════════════════════════════════════
+    # FIRST 5 SECONDS — HIGHLIGHT (thumbnail frame)
+    # Big positive Telugu statement — most viral part
+    # ═══════════════════════════════════════════════════
 
-    # DATE — very large white
+    # Dark overlay for highlight section
+    layers.append(
+        ColorClip(size=(W, H), color=(0,0,0))
+        .with_opacity(0.35).with_duration(HIGHLIGHT_SECS).with_position((0,0))
+    )
+
+    # Sign symbol — huge
     layers.append(make_text(
-        text         = date_str,
-        font_path    = FONT_BOLD,
-        font_size    = 78,
-        color        = "#FFFFFF",
-        width        = W - 20,
-        position     = ("center", 0.01),
-        duration     = dur,
-        stroke_color = "#000000",
-        stroke_width = 4,
+        text=symbol, font_path=FONT_BOLD, font_size=130,
+        color="#FFD700", width=W-20, position=("center", 0.02),
+        duration=HIGHLIGHT_SECS, stroke_width=4,
     ))
 
-    # Telugu Rasi name in Telugu font under date
+    # Rasi name in Telugu
     layers.append(make_text(
-        text         = f"{symbol} {rasi_telugu} {symbol}",
-        font_path    = telugu_font,
-        font_size    = 52,
-        color        = "#FFD700",
-        width        = W - 40,
-        position     = ("center", 0.10),
-        duration     = dur,
-        stroke_color = "#000000",
-        stroke_width = 3,
+        text=rasi, font_path=tel_bold, font_size=90,
+        color="#FFFFFF", width=W-20, position=("center", 0.12),
+        duration=HIGHLIGHT_SECS, stroke_width=5,
     ))
 
-    # ════════════════════════════════════════════════════════
-    # MIDDLE SECTION — Scrolling script (6 parts)
-    # ════════════════════════════════════════════════════════
-    display_script = item.get("script_display", item.get("script", ""))
-    parts    = split_script_into_parts(display_script, NUM_PARTS)
-    part_dur = dur / NUM_PARTS
+    # HIGHLIGHT STATEMENT — biggest, most eye-catching
+    layers.append(make_text(
+        text=highlight_text, font_path=tel_bold, font_size=72,
+        color="#FFD700", width=W-40, position=("center", 0.38),
+        duration=HIGHLIGHT_SECS, stroke_color="#000000", stroke_width=4,
+    ))
 
-    for idx, part_text in enumerate(parts):
-        start_t = idx * part_dur
+    # Date
+    layers.append(make_text(
+        text=f"📅 {date_str}", font_path=FONT_BOLD, font_size=44,
+        color="#FFFFFF", width=W-40, position=("center", 0.86),
+        duration=HIGHLIGHT_SECS, stroke_width=3,
+    ))
+
+    # ═══════════════════════════════════════════════════
+    # AFTER 5 SECONDS — Normal video layout
+    # ═══════════════════════════════════════════════════
+    main_dur   = dur - HIGHLIGHT_SECS
+    main_start = HIGHLIGHT_SECS
+
+    # Top bar
+    layers.append(
+        ColorClip(size=(W, int(H*0.28)), color=(0,0,0))
+        .with_opacity(0.45).with_duration(main_dur)
+        .with_start(main_start).with_position((0,0))
+    )
+
+    # Symbol
+    layers.append(make_text(
+        text=symbol, font_path=FONT_BOLD, font_size=100,
+        color="#FFD700", width=W-20, position=("center",0.01),
+        duration=main_dur, stroke_width=4, start=main_start,
+    ))
+
+    # Rasi name Telugu
+    layers.append(make_text(
+        text=rasi, font_path=tel_bold, font_size=82,
+        color="#FFFFFF", width=W-20, position=("center",0.09),
+        duration=main_dur, stroke_width=5, start=main_start,
+    ))
+
+    # Date bar
+    layers.append(
+        ColorClip(size=(W, 75), color=(160,50,0))
+        .with_duration(main_dur).with_start(main_start)
+        .with_position((0, int(H*0.28)))
+    )
+    layers.append(make_text(
+        text=f"📅 {date_str} | Telugu Horoscope",
+        font_path=FONT_BOLD, font_size=34, color="#FFFFFF",
+        width=W-20, position=("center",0.285),
+        duration=main_dur, stroke_width=2, start=main_start,
+    ))
+
+    # ── Script in Telugu — 6 parts scrolling ─────────────────────────────────
+    # Use script_telugu for display (Telugu script, NotoSansTelugu font)
+    telugu_script = item.get("script_telugu", item.get("script",""))
+    parts    = split_script(telugu_script, NUM_PARTS)
+    part_dur = main_dur / NUM_PARTS
+
+    for idx, part in enumerate(parts):
+        st = main_start + idx * part_dur
 
         layers.append(make_text(
-            text      = f"({idx+1}/{NUM_PARTS})",
-            font_path = FONT_REGULAR,
-            font_size = 24,
-            color     = "#FFD700",
-            width     = W - 60,
-            position  = ("center", 0.21),
-            duration  = part_dur,
-            start     = start_t,
-            stroke_width = 1,
+            text=f"({idx+1}/{NUM_PARTS})", font_path=tel_reg, font_size=26,
+            color="#FFD700", width=W-60, position=("center",0.345),
+            duration=part_dur, stroke_width=1, start=st,
         ))
 
+        # ALL script text in Telugu using Telugu font
         layers.append(make_text(
-            text      = part_text,
-            font_path = FONT_CAPTION,
-            font_size = 40,
-            color     = "#FFFFFF",
-            width     = W - 60,
-            position  = ("center", 0.26),
-            duration  = part_dur,
-            start     = start_t,
-            stroke_width = 2,
+            text=part, font_path=tel_bold, font_size=46,
+            color="#FFFFFF", width=W-40, position=("center",0.375),
+            duration=part_dur, stroke_width=3, start=st,
         ))
 
-    # ════════════════════════════════════════════════════════
-    # BOTTOM SECTION — Big sign name + promo
-    # ════════════════════════════════════════════════════════
-    bottom_bar = (ColorClip(size=(W, int(H * 0.25)), color=(0, 0, 0))
-                  .with_opacity(0.65).with_duration(dur)
-                  .with_position((0, int(H * 0.75))))
-    layers.append(bottom_bar)
-
-    # Telugu rasi name BIG at bottom — most visible in YouTube scroll
+    # Bottom promo bar
+    layers.append(
+        ColorClip(size=(W,110), color=(0,0,0))
+        .with_opacity(0.7).with_duration(main_dur).with_start(main_start)
+        .with_position((0, H-110))
+    )
     layers.append(make_text(
-        text         = f"{symbol} {rasi_telugu} {symbol}",
-        font_path    = telugu_font,
-        font_size    = 88,
-        color        = "#FFD700",
-        width        = W - 20,
-        position     = ("center", 0.76),
-        duration     = dur,
-        stroke_color = "#000000",
-        stroke_width = 5,
-    ))
-
-    # Promo
-    layers.append(make_text(
-        text      = "⬇ Download Astroverse App\nLink in channel description",
-        font_path = FONT_CAPTION,
-        font_size = 30,
-        color     = "#FFFFFF",
-        width     = W - 80,
-        position  = ("center", 0.89),
-        duration  = dur,
-        stroke_width = 2,
+        text="⬇ Astroverse App - Link in Description",
+        font_path=tel_reg, font_size=32, color="#FFD700",
+        width=W-60, position=("center",0.928),
+        duration=main_dur, stroke_width=2, start=main_start,
     ))
 
     # ── Compose & export ──────────────────────────────────────────────────────
     final = CompositeVideoClip(layers).with_audio(audio)
-
-    slug = f'{item["sign"]}_{item["language"]}'.replace(" ", "_").lower()
-    out  = str(pathlib.Path(out_dir) / f"{slug}.mp4")
-
-    final.write_videofile(
-        out, fps=30, codec="libx264",
-        audio_codec="aac", threads=4,
-        preset="fast", logger=None,
-    )
+    slug  = f'{item["sign"]}_{item["language"]}'.replace(" ","_").lower()
+    out   = str(pathlib.Path(out_dir) / f"{slug}.mp4")
+    final.write_videofile(out, fps=30, codec="libx264",
+                          audio_codec="aac", threads=4,
+                          preset="fast", logger=None)
     return out

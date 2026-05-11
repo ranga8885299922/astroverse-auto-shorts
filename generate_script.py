@@ -6,52 +6,44 @@ from zoneinfo import ZoneInfo
 from groq import Groq
 
 PROMO_TELUGU = "వ్యక్తిగత రాశి సందేహాల కోసం, చానల్ డిస్క్రిప్షన్ లో ఉన్న Astroverse యాప్ లింక్ డౌన్లోడ్ చేసుకోండి."
-PROMO_DISPLAY = "Vyaktigata rashi sandehala kosam, channel description lo unna Astroverse app link download chesukondi."
 
 RASI_TELUGU = {
-    "Aries":       "మేష రాశి",
-    "Taurus":      "వృషభ రాశి",
-    "Gemini":      "మిథున రాశి",
-    "Cancer":      "కర్కాటక రాశి",
-    "Leo":         "సింహ రాశి",
-    "Virgo":       "కన్యా రాశి",
-    "Libra":       "తుల రాశి",
-    "Scorpio":     "వృశ్చిక రాశి",
-    "Sagittarius": "ధనుస్సు రాశి",
-    "Capricorn":   "మకర రాశి",
-    "Aquarius":    "కుంభ రాశి",
-    "Pisces":      "మీన రాశి",
+    "Aries":"మేష రాశి","Taurus":"వృషభ రాశి","Gemini":"మిథున రాశి",
+    "Cancer":"కర్కాటక రాశి","Leo":"సింహ రాశి","Virgo":"కన్యా రాశి",
+    "Libra":"తుల రాశి","Scorpio":"వృశ్చిక రాశి","Sagittarius":"ధనుస్సు రాశి",
+    "Capricorn":"మకర రాశి","Aquarius":"కుంభ రాశి","Pisces":"మీన రాశి",
 }
 
 SIGN_SYMBOLS = {
-    "Aries": "♈", "Taurus": "♉", "Gemini": "♊", "Cancer": "♋",
-    "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Scorpio": "♏",
-    "Sagittarius": "♐", "Capricorn": "♑", "Aquarius": "♒", "Pisces": "♓"
+    "Aries":"♈","Taurus":"♉","Gemini":"♊","Cancer":"♋",
+    "Leo":"♌","Virgo":"♍","Libra":"♎","Scorpio":"♏",
+    "Sagittarius":"♐","Capricorn":"♑","Aquarius":"♒","Pisces":"♓"
 }
 
-
-def _get_ist_date():
-    ist_now = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    return ist_now.strftime("%B %d, %Y"), ist_now.strftime("%b %d %Y")
-
+def _get_ist_dates():
+    """Return tomorrow's date in IST (for next-day scheduling)."""
+    ist_now      = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
+    tomorrow     = ist_now + datetime.timedelta(days=1)
+    today_str    = tomorrow.strftime("%B %d, %Y")
+    date_short   = tomorrow.strftime("%b %d %Y")
+    return today_str, date_short
 
 def _call_groq(client, sign, languages, theme, tone) -> list[dict]:
-    today, date_short = _get_ist_date()
-    lang = languages[0]
-    rasi_telugu = RASI_TELUGU.get(sign, sign)
-    symbol = SIGN_SYMBOLS.get(sign, "🔮")
+    today, date_short = _get_ist_dates()
+    lang         = languages[0]
+    rasi_telugu  = RASI_TELUGU.get(sign, sign)
+    symbol       = SIGN_SYMBOLS.get(sign, "🔮")
 
     prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}.
 
-Return ONLY this JSON object. Start with {{ end with }}. No text outside JSON:
+Return ONLY this JSON. Start with {{ end with }}. No text outside:
 {{
   "sign": "{sign}",
   "rasi_telugu": "{rasi_telugu}",
   "language": "{lang['name']}",
   "language_code": "{lang['code']}",
-  "title_telugu": "{symbol} {rasi_telugu} - {date_short}",
-  "script_telugu": "Write 250 word horoscope in pure Telugu script (తెలుగు). Include: todays active planet name, career advice, money guidance, love and family, health tip, one risk with specific prayer remedy, lucky color and number, closing blessing.",
-  "script_display": "Write SAME content in Tenglish (Telugu words spelled in English letters only, no English words). 250 words.",
+  "highlight_telugu": "Single most positive powerful statement in pure Telugu script for {sign} on {today}. Like: మేష రాశి వారికి ఈరోజు గొప్ప ధన లాభం కలుగుతుంది. Max 12 words. Must be in Telugu script. Must be most exciting positive thing happening today.",
+  "script_telugu": "Write 250 word horoscope in pure Telugu script. Cover: active planet, career, money, love, health, 1 risk + prayer remedy, lucky color+number, closing blessing.",
   "title_en": "{sign} - {date_short} | Telugu Daily Horoscope"
 }}"""
 
@@ -59,21 +51,20 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside JSON:
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a Vedic astrologer. Return ONLY a raw JSON object. Start with { end with }. No markdown. No text before or after JSON."
+                        "content": "Expert Vedic astrologer. Write ALL content in pure Telugu unicode script (తెలుగు). Return ONLY raw JSON starting with { ending with }. No markdown."
                     },
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=3500,
+                max_tokens=3000,
             )
 
             raw = response.choices[0].message.content.strip()
 
-            # Strip markdown fences if present
             if "```" in raw:
                 for part in raw.split("```"):
                     part = part.strip()
@@ -83,30 +74,26 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside JSON:
                         raw = part
                         break
 
-            # Find JSON boundaries
             start = raw.find("{")
             end   = raw.rfind("}") + 1
             if start == -1 or end <= 1:
-                raise ValueError(f"No JSON object found in response")
+                raise ValueError("No JSON object found")
 
             obj = json.loads(raw[start:end])
 
-            # Validate required keys exist
-            required = ["sign", "script_telugu", "script_display", "title_en"]
+            required = ["sign", "script_telugu", "highlight_telugu", "title_en"]
             for key in required:
                 if key not in obj or not obj[key]:
-                    raise ValueError(f"Missing or empty key: {key}")
+                    raise ValueError(f"Missing key: {key}")
 
-            # Append promo
-            obj["script"]         = obj["script_telugu"] + " " + PROMO_TELUGU
-            obj["script_display"] = obj["script_display"] + " " + PROMO_DISPLAY
-            obj["rasi_telugu"]    = obj.get("rasi_telugu", RASI_TELUGU.get(sign, sign))
-            obj["title_telugu"]   = obj.get("title_telugu", f"{symbol} {RASI_TELUGU.get(sign, sign)} - {date_short}")
+            obj["script"]        = obj["script_telugu"] + " " + PROMO_TELUGU
+            obj["rasi_telugu"]   = obj.get("rasi_telugu", rasi_telugu)
+            obj["title_en"]      = obj.get("title_en", f"{sign} - {date_short} | Telugu Daily Horoscope")
 
             return [obj]
 
         except json.JSONDecodeError as e:
-            last_error = f"JSON parse error: {e}"
+            last_error = f"JSON error: {e}"
             print(f"        Attempt {attempt+1} failed: {last_error}")
             time.sleep(5)
         except ValueError as e:
@@ -115,14 +102,13 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside JSON:
             time.sleep(5)
         except Exception as e:
             if "429" in str(e):
-                wait = 70
-                print(f"        Rate limit hit, waiting {wait}s...")
-                time.sleep(wait)
+                print(f"        Rate limit, waiting 70s...")
+                time.sleep(70)
                 last_error = str(e)
             else:
                 raise
 
-    raise RuntimeError(f"Failed after 3 attempts for {sign}. Last error: {last_error}")
+    raise RuntimeError(f"Failed after 3 attempts for {sign}. Last: {last_error}")
 
 
 def generate_scripts(config: dict) -> list[dict]:
