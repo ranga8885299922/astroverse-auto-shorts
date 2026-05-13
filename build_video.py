@@ -227,7 +227,7 @@ def build_video(item, audio_path, config, out_dir):
         .with_position((0, H-110))
     )
     layers.append(make_text(
-        text="⬇ Astroverse App - Link in Description",
+        text="⬇ Astroloz App - Link in Description",
         font_path=tel_reg, font_size=32, color="#FFD700",
         width=W-60, position=("center",0.928),
         duration=main_dur, stroke_width=2, start=main_start,
