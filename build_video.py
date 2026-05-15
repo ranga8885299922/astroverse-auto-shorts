@@ -180,7 +180,7 @@ def build_video(item, audio_path, config, out_dir):
 
     # Rasi name Telugu
     layers.append(make_text(
-        text=rasi, font_path=tel_bold, font_size=82,
+        text=rasi, font_path=tel_bold, font_size=83,
         color="#FFFFFF", width=W-20, position=("center",0.09),
         duration=main_dur, stroke_width=5, start=main_start,
     ))
@@ -215,7 +215,7 @@ def build_video(item, audio_path, config, out_dir):
 
         # ALL script text in Telugu using Telugu font
         layers.append(make_text(
-            text=part, font_path=tel_bold, font_size=46,
+            text=part, font_path=tel_bold, font_size=83,
             color="#FFFFFF", width=W-40, position=("center",0.375),
             duration=part_dur, stroke_width=3, start=st,
         ))
@@ -227,7 +227,7 @@ def build_video(item, audio_path, config, out_dir):
         .with_position((0, H-110))
     )
     layers.append(make_text(
-        text="⬇ Astroloz App - Link in Description",
+        text="⬇ Astroverse App - Link in Description",
         font_path=tel_reg, font_size=32, color="#FFD700",
         width=W-60, position=("center",0.928),
         duration=main_dur, stroke_width=2, start=main_start,
