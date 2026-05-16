@@ -23,7 +23,7 @@ SIGN_SYMBOLS = {
 def _get_ist_dates():
     """Return tomorrow's date in IST (for next-day scheduling)."""
     ist_now      = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    tomorrow     = ist_now + datetime.timedelta(days=0)
+    tomorrow     = ist_now + datetime.timedelta(days=1)
     today_str    = tomorrow.strftime("%B %d, %Y")
     date_short   = tomorrow.strftime("%b %d %Y")
     return today_str, date_short
