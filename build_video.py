@@ -221,15 +221,22 @@ def build_video(item, audio_path, config, out_dir):
         ))
 
     # Bottom promo bar
+    # astroloz.com bold website line
+    layers.append(make_text(
+        text="🌐 astroloz.com",
+        font_path=FONT_BOLD, font_size=52, color="#FFD700",
+        width=W-40, position=("center",0.875),
+        duration=main_dur, stroke_color="#000000", stroke_width=4, start=main_start,
+    ))
     layers.append(
-        ColorClip(size=(W,110), color=(0,0,0))
+        ColorClip(size=(W,160), color=(0,0,0))
         .with_opacity(0.7).with_duration(main_dur).with_start(main_start)
-        .with_position((0, H-110))
+        .with_position((0, H-160))
     )
     layers.append(make_text(
         text="⬇ Astroverse App - Link in Description",
         font_path=tel_reg, font_size=32, color="#FFD700",
-        width=W-60, position=("center",0.928),
+        width=W-60, position=("center",0.945),
         duration=main_dur, stroke_width=2, start=main_start,
     ))
 
