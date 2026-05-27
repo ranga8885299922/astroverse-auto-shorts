@@ -1,37 +1,30 @@
 {
-  "channel_name": "Astroverse",
-  "daily_theme": "weekly forecast",
-  "tone": "mystical, poetic, encouraging",
-
   "signs": [
-    "Aries", "Taurus", "Gemini", "Cancer",
-    "Leo", "Virgo", "Libra", "Scorpio",
-    "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+    "Aries","Taurus","Gemini","Cancer",
+    "Leo","Virgo","Libra","Scorpio",
+    "Sagittarius","Capricorn","Aquarius","Pisces"
   ],
-
-"languages": [
-    {"code": "te-IN", "name": "Telugu",  "font": "Hind Guntur"}
-],
-"_languages_paused": [
+  "languages": [
+    {"code": "te-IN", "name": "Telugu", "font": "Hind Guntur"}
+  ],
+  "_languages_paused": [
     {"code": "hi-IN", "name": "Hindi",   "font": "Noto Sans Devanagari"},
     {"code": "ta-IN", "name": "Tamil",   "font": "Noto Sans Tamil"},
     {"code": "kn-IN", "name": "Kannada", "font": "Noto Sans Kannada"},
     {"code": "bn-IN", "name": "Bengali", "font": "Noto Sans Bengali"},
     {"code": "mr-IN", "name": "Marathi", "font": "Noto Sans Devanagari"}
-],
-
+  ],
+  "daily_theme": "Love & relationships forecast",
+  "tone": "warm, motivational, Vedic",
   "video": {
     "width": 1080,
     "height": 1920,
     "background_file": "backgrounds/stars_loop.mp4",
+    "caption_font_size": 48,
     "caption_color": "#FFFFFF",
-    "caption_font_size": 52,
     "max_chars_per_line": 28
   },
-
-  "youtube": {
-    "privacy": "public",
-    "category_id": "22",
-    "tags": ["astrology", "zodiac", "shorts", "daily horoscope"]
-  }
+  "promo_telugu": "వ్యక్తిగత రాశి ఫలాలు, ప్రశ్నలకు సమాధానాల కోసం astroloz.com వెబ్‌సైట్ లో పూర్తిగా ఉచింతగా పొందండి. లింక్ చానల్ డిస్క్రిప్షన్ లో ఉంది.",
+  "promo_website": "🌐 astroloz.com",
+  "_promo_note": "Set promo_telugu and promo_website to empty string to disable promo. Example: 'promo_telugu': ''"
 }

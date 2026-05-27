@@ -1,9 +1,7 @@
 name: Astroverse Daily Shorts
 
 on:
-  schedule:
-    - cron: "0 0 * * *"   # 3:00 AM UTC = 6:00 AM IST every day
-  workflow_dispatch:        # Manual trigger from GitHub UI
+  workflow_dispatch:   # Manual trigger only
 
 jobs:
   run-shorts:
@@ -34,13 +32,12 @@ jobs:
         run: |
           mkdir -p credentials
           echo '${{ secrets.CLIENT_SECRET_JSON }}' > credentials/client_secret.json
-          echo '${{ secrets.TOKEN_PICKLE_B64 }}'   | base64 --decode > credentials/token.pickle
+          echo '${{ secrets.TOKEN_PICKLE_B64 }}' | base64 --decode > credentials/token.pickle
 
       - name: Run Astroverse automation
         env:
-          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
-          SARVAM_API_KEY:     ${{ secrets.SARVAM_API_KEY }}
-          USE_THEME_ROTATION: "true"
+          GROQ_API_KEY:   ${{ secrets.GROQ_API_KEY }}
+          SARVAM_API_KEY: ${{ secrets.SARVAM_API_KEY }}
         run: python main.py
 
       - name: Upload run log

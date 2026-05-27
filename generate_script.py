@@ -5,8 +5,6 @@ import datetime
 from zoneinfo import ZoneInfo
 from groq import Groq
 
-PROMO_TELUGU = "వ్యక్తిగత రాశి సందేహాల కోసం, చానల్ డిస్క్రిప్షన్ లో ఉన్న Astroverse యాప్ లింక్ డౌన్లోడ్ చేసుకోండి."
-
 RASI_TELUGU = {
     "Aries":"మేష రాశి","Taurus":"వృషభ రాశి","Gemini":"మిథున రాశి",
     "Cancer":"కర్కాటక రాశి","Leo":"సింహ రాశి","Virgo":"కన్యా రాశి",
@@ -21,28 +19,27 @@ SIGN_SYMBOLS = {
 }
 
 def _get_ist_dates():
-    """Return tomorrow's date in IST (for next-day scheduling)."""
-    ist_now      = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    tomorrow     = ist_now + datetime.timedelta(days=1)
-    today_str    = tomorrow.strftime("%B %d, %Y")
-    date_short   = tomorrow.strftime("%b %d %Y")
+    ist_now    = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
+    tomorrow   = ist_now + datetime.timedelta(days=1)
+    today_str  = tomorrow.strftime("%B %d, %Y")
+    date_short = tomorrow.strftime("%b %d %Y")
     return today_str, date_short
 
-def _call_groq(client, sign, languages, theme, tone) -> list[dict]:
+def _call_groq(client, sign, languages, theme, tone, promo_telugu) -> list[dict]:
     today, date_short = _get_ist_dates()
-    lang         = languages[0]
-    rasi_telugu  = RASI_TELUGU.get(sign, sign)
-    symbol       = SIGN_SYMBOLS.get(sign, "🔮")
+    lang        = languages[0]
+    rasi_telugu = RASI_TELUGU.get(sign, sign)
+    symbol      = SIGN_SYMBOLS.get(sign, "🔮")
 
     prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}.
 
-Return ONLY this JSON. Start with {{ end with }}. No text outside:
+Return ONLY this JSON object. Start with {{ end with }}. No text outside:
 {{
   "sign": "{sign}",
   "rasi_telugu": "{rasi_telugu}",
   "language": "{lang['name']}",
   "language_code": "{lang['code']}",
-  "highlight_telugu": "Single most positive powerful statement in pure Telugu script for {sign} on {today}. Like: మేష రాశి వారికి ఈరోజు గొప్ప ధన లాభం కలుగుతుంది. Max 12 words. Must be in Telugu script. Must be most exciting positive thing happening today.",
+  "highlight_telugu": "Single most positive powerful statement in pure Telugu script for {sign} on {today}. Max 12 words. Must be Telugu script. Most exciting positive thing today.",
   "script_telugu": "Write 250 word horoscope in pure Telugu script. Cover: active planet, career, money, love, health, 1 risk + prayer remedy, lucky color+number, closing blessing.",
   "title_en": "{sign} - {date_short} | Telugu Daily Horoscope"
 }}"""
@@ -55,7 +52,7 @@ Return ONLY this JSON. Start with {{ end with }}. No text outside:
                 messages=[
                     {
                         "role": "system",
-                        "content": "Expert Vedic astrologer. Write ALL content in pure Telugu unicode script (తెలుగు). Return ONLY raw JSON starting with { ending with }. No markdown."
+                        "content": "Expert Vedic astrologer. Write ALL content in pure Telugu unicode script. Return ONLY raw JSON starting with { ending with }. No markdown."
                     },
                     {"role": "user", "content": prompt}
                 ],
@@ -64,7 +61,6 @@ Return ONLY this JSON. Start with {{ end with }}. No text outside:
             )
 
             raw = response.choices[0].message.content.strip()
-
             if "```" in raw:
                 for part in raw.split("```"):
                     part = part.strip()
@@ -86,10 +82,13 @@ Return ONLY this JSON. Start with {{ end with }}. No text outside:
                 if key not in obj or not obj[key]:
                     raise ValueError(f"Missing key: {key}")
 
-            obj["script"]        = obj["script_telugu"] + " " + PROMO_TELUGU
-            obj["rasi_telugu"]   = obj.get("rasi_telugu", rasi_telugu)
-            obj["title_en"]      = obj.get("title_en", f"{sign} - {date_short} | Telugu Daily Horoscope")
+            # Append promo from config only if set
+            script = obj["script_telugu"]
+            if promo_telugu:
+                script = script + " " + promo_telugu
+            obj["script"] = script
 
+            obj["rasi_telugu"] = obj.get("rasi_telugu", rasi_telugu)
             return [obj]
 
         except json.JSONDecodeError as e:
@@ -112,16 +111,17 @@ Return ONLY this JSON. Start with {{ end with }}. No text outside:
 
 
 def generate_scripts(config: dict) -> list[dict]:
-    client    = Groq(api_key=os.environ["GROQ_API_KEY"])
-    signs     = config["signs"]
-    languages = config["languages"]
-    theme     = config["daily_theme"]
-    tone      = config["tone"]
+    client       = Groq(api_key=os.environ["GROQ_API_KEY"])
+    signs        = config["signs"]
+    languages    = config["languages"]
+    theme        = config["daily_theme"]
+    tone         = config["tone"]
+    promo_telugu = config.get("promo_telugu", "")  # Read from config
 
     all_scripts = []
     for i, sign in enumerate(signs, 1):
         print(f"  → Sign {i}/{len(signs)}: {sign}...")
-        results = _call_groq(client, sign, languages, theme, tone)
+        results = _call_groq(client, sign, languages, theme, tone, promo_telugu)
         all_scripts.extend(results)
         if i < len(signs):
             time.sleep(4)

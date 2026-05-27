@@ -48,8 +48,8 @@ def find_font(names):
 FONT_REGULAR = find_font(["arial.ttf","Arial.ttf","DejaVuSans.ttf","FreeSans.ttf"])
 FONT_BOLD    = find_font(["arialbd.ttf","Arial Bold.ttf","DejaVuSans-Bold.ttf","FreeSansBold.ttf"])
 
-NUM_PARTS        = 6
-HIGHLIGHT_SECS   = 5  # First 5 seconds show highlight
+NUM_PARTS      = 6
+HIGHLIGHT_SECS = 5
 
 SIGN_SYMBOLS = {
     "Aries":"♈","Taurus":"♉","Gemini":"♊","Cancer":"♋",
@@ -99,148 +99,105 @@ def build_video(item, audio_path, config, out_dir):
     vc   = config["video"]
     W, H = vc["width"], vc["height"]
 
-    # Tomorrow's date for display
-    ist_now    = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    tomorrow   = ist_now + datetime.timedelta(days=1)
-    date_str   = tomorrow.strftime("%b %d %Y")
+    # Read promo from config — empty string = no promo shown
+    promo_website = config.get("promo_website", "").strip()
+    promo_telugu  = config.get("promo_telugu", "").strip()
+    show_promo    = bool(promo_website or promo_telugu)
 
-    symbol          = SIGN_SYMBOLS.get(item["sign"], "🔮")
-    rasi            = item.get("rasi_telugu", item["sign"])
-    highlight_text  = item.get("highlight_telugu", rasi)
+    ist_now  = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
+    tomorrow = ist_now + datetime.timedelta(days=1)
+    date_str = tomorrow.strftime("%b %d %Y")
 
-    # Telugu fonts
-    tel_bold = TELUGU_BOLD_PATH    if os.path.exists(TELUGU_BOLD_PATH)  else \
-               TELUGU_FONT_PATH    if os.path.exists(TELUGU_FONT_PATH)  else FONT_BOLD
-    tel_reg  = TELUGU_FONT_PATH    if os.path.exists(TELUGU_FONT_PATH)  else FONT_REGULAR
+    symbol   = SIGN_SYMBOLS.get(item["sign"], "🔮")
+    rasi     = item.get("rasi_telugu", item["sign"])
+    highlight_text = item.get("highlight_telugu", rasi)
+
+    tel_bold = TELUGU_BOLD_PATH if os.path.exists(TELUGU_BOLD_PATH) else \
+               TELUGU_FONT_PATH if os.path.exists(TELUGU_FONT_PATH) else FONT_BOLD
+    tel_reg  = TELUGU_FONT_PATH if os.path.exists(TELUGU_FONT_PATH) else FONT_REGULAR
 
     audio = AudioFileClip(audio_path)
     dur   = audio.duration
-
     bg    = ImageClip(make_orange_bg(W, H)).with_duration(dur)
     layers = [bg]
 
     # ═══════════════════════════════════════════════════
     # FIRST 5 SECONDS — HIGHLIGHT (thumbnail frame)
-    # Big positive Telugu statement — most viral part
     # ═══════════════════════════════════════════════════
-
-    # Dark overlay for highlight section
     layers.append(
-        ColorClip(size=(W, H), color=(0,0,0))
+        ColorClip(size=(W,H), color=(0,0,0))
         .with_opacity(0.35).with_duration(HIGHLIGHT_SECS).with_position((0,0))
     )
-
-    # Sign symbol — huge
-    layers.append(make_text(
-        text=symbol, font_path=FONT_BOLD, font_size=130,
-        color="#FFD700", width=W-20, position=("center", 0.02),
-        duration=HIGHLIGHT_SECS, stroke_width=4,
-    ))
-
-    # Rasi name in Telugu
-    layers.append(make_text(
-        text=rasi, font_path=tel_bold, font_size=90,
-        color="#FFFFFF", width=W-20, position=("center", 0.12),
-        duration=HIGHLIGHT_SECS, stroke_width=5,
-    ))
-
-    # HIGHLIGHT STATEMENT — biggest, most eye-catching
-    layers.append(make_text(
-        text=highlight_text, font_path=tel_bold, font_size=72,
-        color="#FFD700", width=W-40, position=("center", 0.38),
-        duration=HIGHLIGHT_SECS, stroke_color="#000000", stroke_width=4,
-    ))
-
-    # Date
-    layers.append(make_text(
-        text=f"📅 {date_str}", font_path=FONT_BOLD, font_size=44,
-        color="#FFFFFF", width=W-40, position=("center", 0.86),
-        duration=HIGHLIGHT_SECS, stroke_width=3,
-    ))
+    layers.append(make_text(symbol, FONT_BOLD, 130, "#FFD700", W-20,
+                            ("center",0.02), HIGHLIGHT_SECS, stroke_width=4))
+    layers.append(make_text(rasi, tel_bold, 90, "#FFFFFF", W-20,
+                            ("center",0.12), HIGHLIGHT_SECS, stroke_width=5))
+    layers.append(make_text(highlight_text, tel_bold, 72, "#FFD700", W-40,
+                            ("center",0.38), HIGHLIGHT_SECS,
+                            stroke_color="#000000", stroke_width=4))
+    layers.append(make_text(f"📅 {date_str}", FONT_BOLD, 44, "#FFFFFF", W-40,
+                            ("center",0.86), HIGHLIGHT_SECS, stroke_width=3))
 
     # ═══════════════════════════════════════════════════
-    # AFTER 5 SECONDS — Normal video layout
+    # AFTER 5 SECONDS — Main video
     # ═══════════════════════════════════════════════════
     main_dur   = dur - HIGHLIGHT_SECS
     main_start = HIGHLIGHT_SECS
 
-    # Top bar
     layers.append(
         ColorClip(size=(W, int(H*0.28)), color=(0,0,0))
         .with_opacity(0.45).with_duration(main_dur)
         .with_start(main_start).with_position((0,0))
     )
-
-    # Symbol
-    layers.append(make_text(
-        text=symbol, font_path=FONT_BOLD, font_size=100,
-        color="#FFD700", width=W-20, position=("center",0.01),
-        duration=main_dur, stroke_width=4, start=main_start,
-    ))
-
-    # Rasi name Telugu
-    layers.append(make_text(
-        text=rasi, font_path=tel_bold, font_size=83,
-        color="#FFFFFF", width=W-20, position=("center",0.09),
-        duration=main_dur, stroke_width=5, start=main_start,
-    ))
-
-    # Date bar
+    layers.append(make_text(symbol, FONT_BOLD, 100, "#FFD700", W-20,
+                            ("center",0.01), main_dur, stroke_width=4, start=main_start))
+    layers.append(make_text(rasi, tel_bold, 83, "#FFFFFF", W-20,
+                            ("center",0.09), main_dur, stroke_width=5, start=main_start))
     layers.append(
-        ColorClip(size=(W, 75), color=(160,50,0))
+        ColorClip(size=(W,75), color=(160,50,0))
         .with_duration(main_dur).with_start(main_start)
         .with_position((0, int(H*0.28)))
     )
-    layers.append(make_text(
-        text=f"📅 {date_str} | Telugu Horoscope",
-        font_path=FONT_BOLD, font_size=34, color="#FFFFFF",
-        width=W-20, position=("center",0.285),
-        duration=main_dur, stroke_width=2, start=main_start,
-    ))
+    layers.append(make_text(f"📅 {date_str} | Telugu Horoscope",
+                            FONT_BOLD, 34, "#FFFFFF", W-20,
+                            ("center",0.285), main_dur, stroke_width=2, start=main_start))
 
-    # ── Script in Telugu — 6 parts scrolling ─────────────────────────────────
-    # Use script_telugu for display (Telugu script, NotoSansTelugu font)
+    # Script in Telugu — 6 parts
     telugu_script = item.get("script_telugu", item.get("script",""))
     parts    = split_script(telugu_script, NUM_PARTS)
     part_dur = main_dur / NUM_PARTS
-
     for idx, part in enumerate(parts):
         st = main_start + idx * part_dur
+        layers.append(make_text(f"({idx+1}/{NUM_PARTS})", tel_reg, 26,
+                                "#FFD700", W-60, ("center",0.345),
+                                part_dur, stroke_width=1, start=st))
+        layers.append(make_text(part, tel_bold, 83, "#FFFFFF", W-40,
+                                ("center",0.375), part_dur,
+                                stroke_width=3, start=st))
 
-        layers.append(make_text(
-            text=f"({idx+1}/{NUM_PARTS})", font_path=tel_reg, font_size=26,
-            color="#FFD700", width=W-60, position=("center",0.345),
-            duration=part_dur, stroke_width=1, start=st,
-        ))
+    # ═══════════════════════════════════════════════════
+    # BOTTOM PROMO — only if set in config
+    # ═══════════════════════════════════════════════════
+    if show_promo:
+        bottom_h = 160 if (promo_website and promo_telugu) else 110
+        layers.append(
+            ColorClip(size=(W, bottom_h), color=(0,0,0))
+            .with_opacity(0.7).with_duration(main_dur).with_start(main_start)
+            .with_position((0, H - bottom_h))
+        )
+        if promo_website:
+            layers.append(make_text(
+                promo_website, FONT_BOLD, 52, "#FFD700", W-40,
+                ("center", 0.875), main_dur,
+                stroke_color="#000000", stroke_width=4, start=main_start,
+            ))
+        if promo_telugu:
+            layers.append(make_text(
+                promo_telugu, tel_reg, 28, "#FFFFFF", W-40,
+                ("center", 0.945), main_dur,
+                stroke_width=2, start=main_start,
+            ))
 
-        # ALL script text in Telugu using Telugu font
-        layers.append(make_text(
-            text=part, font_path=tel_bold, font_size=83,
-            color="#FFFFFF", width=W-40, position=("center",0.375),
-            duration=part_dur, stroke_width=3, start=st,
-        ))
-
-    # Bottom promo bar
-    # astroloz.com bold website line
-    layers.append(make_text(
-        text="🌐 astroloz.com",
-        font_path=FONT_BOLD, font_size=52, color="#FFD700",
-        width=W-40, position=("center",0.875),
-        duration=main_dur, stroke_color="#000000", stroke_width=4, start=main_start,
-    ))
-    layers.append(
-        ColorClip(size=(W,160), color=(0,0,0))
-        .with_opacity(0.7).with_duration(main_dur).with_start(main_start)
-        .with_position((0, H-160))
-    )
-    layers.append(make_text(
-        text="⬇ Astroverse App - Link in Description",
-        font_path=tel_reg, font_size=32, color="#FFD700",
-        width=W-60, position=("center",0.945),
-        duration=main_dur, stroke_width=2, start=main_start,
-    ))
-
-    # ── Compose & export ──────────────────────────────────────────────────────
     final = CompositeVideoClip(layers).with_audio(audio)
     slug  = f'{item["sign"]}_{item["language"]}'.replace(" ","_").lower()
     out   = str(pathlib.Path(out_dir) / f"{slug}.mp4")
