@@ -24,7 +24,8 @@
     "caption_color": "#FFFFFF",
     "max_chars_per_line": 28
   },
-  "promo_telugu": "వ్యక్తిగత రాశి ఫలాలు, ప్రశ్నలకు సమాధానాల కోసం astroloz.com వెబ్‌సైట్ లో పూర్తిగా ఉచింతగా పొందండి. లింక్ చానల్ డిస్క్రిప్షన్ లో ఉంది.",
+  "promo_telugu": "మీ వ్యక్తిగత రాశి ఫలాలను పూర్తిగా ఉచితంగా పొందడానికి చానల్ డిస్క్రిప్షన్ లో ఉన్న astroloz.com ని క్లిక్ చేయండి.",
   "promo_website": "🌐 astroloz.com",
-  "_promo_note": "Set promo_telugu and promo_website to empty string to disable promo. Example: 'promo_telugu': ''"
+  "promo_display_telugu": "మీ వ్యక్తిగత జాతక ఫలాలను పూర్తిగా ఉచితంగా పొందడానికి astroloz.com వెబ్‌సైట్ ని విజిట్ చేయండి.",
+  "_promo_note": "Set promo_telugu, promo_website, promo_display_telugu to empty string '' to disable. promo_telugu = voice audio, promo_display_telugu = on-screen text"
 }

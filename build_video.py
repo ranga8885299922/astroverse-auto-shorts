@@ -99,17 +99,17 @@ def build_video(item, audio_path, config, out_dir):
     vc   = config["video"]
     W, H = vc["width"], vc["height"]
 
-    # Read promo from config — empty string = no promo shown
-    promo_website = config.get("promo_website", "").strip()
-    promo_telugu  = config.get("promo_telugu", "").strip()
-    show_promo    = bool(promo_website or promo_telugu)
+    # Read promo from config
+    promo_website     = config.get("promo_website", "").strip()
+    promo_display     = config.get("promo_display_telugu", "").strip()
+    show_promo        = bool(promo_website or promo_display)
 
     ist_now  = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
     tomorrow = ist_now + datetime.timedelta(days=1)
     date_str = tomorrow.strftime("%b %d %Y")
 
-    symbol   = SIGN_SYMBOLS.get(item["sign"], "🔮")
-    rasi     = item.get("rasi_telugu", item["sign"])
+    symbol         = SIGN_SYMBOLS.get(item["sign"], "🔮")
+    rasi           = item.get("rasi_telugu", item["sign"])
     highlight_text = item.get("highlight_telugu", rasi)
 
     tel_bold = TELUGU_BOLD_PATH if os.path.exists(TELUGU_BOLD_PATH) else \
@@ -121,9 +121,9 @@ def build_video(item, audio_path, config, out_dir):
     bg    = ImageClip(make_orange_bg(W, H)).with_duration(dur)
     layers = [bg]
 
-    # ═══════════════════════════════════════════════════
-    # FIRST 5 SECONDS — HIGHLIGHT (thumbnail frame)
-    # ═══════════════════════════════════════════════════
+    # ═══════════════════════════════════════════
+    # FIRST 5 SECONDS — HIGHLIGHT (thumbnail)
+    # ═══════════════════════════════════════════
     layers.append(
         ColorClip(size=(W,H), color=(0,0,0))
         .with_opacity(0.35).with_duration(HIGHLIGHT_SECS).with_position((0,0))
@@ -138,12 +138,13 @@ def build_video(item, audio_path, config, out_dir):
     layers.append(make_text(f"📅 {date_str}", FONT_BOLD, 44, "#FFFFFF", W-40,
                             ("center",0.86), HIGHLIGHT_SECS, stroke_width=3))
 
-    # ═══════════════════════════════════════════════════
+    # ═══════════════════════════════════════════
     # AFTER 5 SECONDS — Main video
-    # ═══════════════════════════════════════════════════
+    # ═══════════════════════════════════════════
     main_dur   = dur - HIGHLIGHT_SECS
     main_start = HIGHLIGHT_SECS
 
+    # Top bar
     layers.append(
         ColorClip(size=(W, int(H*0.28)), color=(0,0,0))
         .with_opacity(0.45).with_duration(main_dur)
@@ -153,6 +154,7 @@ def build_video(item, audio_path, config, out_dir):
                             ("center",0.01), main_dur, stroke_width=4, start=main_start))
     layers.append(make_text(rasi, tel_bold, 83, "#FFFFFF", W-20,
                             ("center",0.09), main_dur, stroke_width=5, start=main_start))
+    # Date bar
     layers.append(
         ColorClip(size=(W,75), color=(160,50,0))
         .with_duration(main_dur).with_start(main_start)
@@ -162,10 +164,12 @@ def build_video(item, audio_path, config, out_dir):
                             FONT_BOLD, 34, "#FFFFFF", W-20,
                             ("center",0.285), main_dur, stroke_width=2, start=main_start))
 
-    # Script in Telugu — 6 parts
+    # Script in Telugu — 6 parts scrolling
+    # Use only script_telugu (without promo) for display
     telugu_script = item.get("script_telugu", item.get("script",""))
     parts    = split_script(telugu_script, NUM_PARTS)
     part_dur = main_dur / NUM_PARTS
+
     for idx, part in enumerate(parts):
         st = main_start + idx * part_dur
         layers.append(make_text(f"({idx+1}/{NUM_PARTS})", tel_reg, 26,
@@ -175,26 +179,31 @@ def build_video(item, audio_path, config, out_dir):
                                 ("center",0.375), part_dur,
                                 stroke_width=3, start=st))
 
-    # ═══════════════════════════════════════════════════
-    # BOTTOM PROMO — only if set in config
-    # ═══════════════════════════════════════════════════
+    # ═══════════════════════════════════════════
+    # BOTTOM PROMO — stays till end, from config
+    # astroloz.com bold + Telugu display text
+    # ═══════════════════════════════════════════
     if show_promo:
-        bottom_h = 160 if (promo_website and promo_telugu) else 110
+        bottom_h = 220
         layers.append(
             ColorClip(size=(W, bottom_h), color=(0,0,0))
-            .with_opacity(0.7).with_duration(main_dur).with_start(main_start)
+            .with_opacity(0.75).with_duration(main_dur).with_start(main_start)
             .with_position((0, H - bottom_h))
         )
+
+        # astroloz.com — big bold gold
         if promo_website:
             layers.append(make_text(
-                promo_website, FONT_BOLD, 52, "#FFD700", W-40,
-                ("center", 0.875), main_dur,
+                promo_website, FONT_BOLD, 55, "#FFD700", W-40,
+                ("center", 0.856), main_dur,
                 stroke_color="#000000", stroke_width=4, start=main_start,
             ))
-        if promo_telugu:
+
+        # Telugu display text — NotoSansTelugu font (NOT gibberish)
+        if promo_display:
             layers.append(make_text(
-                promo_telugu, tel_reg, 28, "#FFFFFF", W-40,
-                ("center", 0.945), main_dur,
+                promo_display, tel_reg, 30, "#FFFFFF", W-40,
+                ("center", 0.905), main_dur,
                 stroke_width=2, start=main_start,
             ))
 
