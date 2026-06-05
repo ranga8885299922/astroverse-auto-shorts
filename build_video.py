@@ -24,15 +24,23 @@ TELUGU_FONT_PATH     = "fonts/NotoSansTelugu-Regular.ttf"
 TELUGU_BOLD_PATH     = "fonts/NotoSansTelugu-Bold.ttf"
 
 def ensure_fonts():
+    import time
     os.makedirs("fonts", exist_ok=True)
     for url, path in [(TELUGU_FONT_URL, TELUGU_FONT_PATH),
                       (TELUGU_FONT_BOLD_URL, TELUGU_BOLD_PATH)]:
-        if not os.path.exists(path):
+        if os.path.exists(path) and os.path.getsize(path) > 10_000:
+            continue
+        for attempt in range(3):
             try:
-                print(f"  Downloading font: {path}")
+                print(f"  Downloading font: {path} (attempt {attempt+1})")
                 urllib.request.urlretrieve(url, path)
+                if os.path.getsize(path) > 10_000:
+                    break
+                os.remove(path)
             except Exception as e:
                 print(f"  Font download failed: {e}")
+                if attempt < 2:
+                    time.sleep(5)
 
 def find_font(names):
     dirs = [r"C:\Windows\Fonts","/usr/share/fonts/truetype/msttcorefonts",
@@ -184,26 +192,30 @@ def build_video(item, audio_path, config, out_dir):
     # astroloz.com bold + Telugu display text
     # ═══════════════════════════════════════════
     if show_promo:
-        bottom_h = 220
+        bottom_h = 260
+        bar_y    = H - bottom_h          # 1660 px from top
+        # relative positions (0.0–1.0 of H=1920):
+        #   astroloz.com centre  → bar_y + 65  = 1725 → 0.898
+        #   Telugu text centre   → bar_y + 175 = 1835 → 0.956
         layers.append(
             ColorClip(size=(W, bottom_h), color=(0,0,0))
             .with_opacity(0.75).with_duration(main_dur).with_start(main_start)
-            .with_position((0, H - bottom_h))
+            .with_position((0, bar_y))
         )
 
-        # astroloz.com — big bold gold
+        # astroloz.com — big bold gold (inside the dark bar)
         if promo_website:
             layers.append(make_text(
                 promo_website, FONT_BOLD, 55, "#FFD700", W-40,
-                ("center", 0.856), main_dur,
+                ("center", 0.898), main_dur,
                 stroke_color="#000000", stroke_width=4, start=main_start,
             ))
 
-        # Telugu display text — NotoSansTelugu font (NOT gibberish)
+        # Telugu display text — NotoSansTelugu font, inside the dark bar
         if promo_display:
             layers.append(make_text(
-                promo_display, tel_reg, 30, "#FFFFFF", W-40,
-                ("center", 0.905), main_dur,
+                promo_display, tel_reg, 32, "#FFFFFF", W-60,
+                ("center", 0.950), main_dur,
                 stroke_width=2, start=main_start,
             ))
 
