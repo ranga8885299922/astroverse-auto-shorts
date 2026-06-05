@@ -27,5 +27,14 @@
   "promo_telugu": "మీ వ్యక్తిగత రాశి ఫలాలను పూర్తిగా ఉచితంగా పొందడానికి చానల్ డిస్క్రిప్షన్ లో ఉన్న astroloz.com ని క్లిక్ చేయండి.",
   "promo_website": "🌐 astroloz.com",
   "promo_display_telugu": "మీ వ్యక్తిగత జాతక ఫలాలను పూర్తిగా ఉచితంగా పొందడానికి astroloz.com వెబ్‌సైట్ ని విజిట్ చేయండి.",
-  "_promo_note": "Set promo_telugu, promo_website, promo_display_telugu to empty string '' to disable. promo_telugu = voice audio, promo_display_telugu = on-screen text"
+  "_promo_note": "Set promo_telugu, promo_website, promo_display_telugu to empty string '' to disable. promo_telugu = voice audio, promo_display_telugu = on-screen text",
+  "youtube": {
+    "privacy":     "public",
+    "category_id": "22",
+    "tags": [
+      "Telugu horoscope", "రాశి ఫలాలు", "daily horoscope Telugu",
+      "astrology Telugu", "horoscope shorts", "astroloz", "astroloz.com",
+      "Vedic astrology", "jyotishyam", "రాశిఫలాలు"
+    ]
+  }
 }

@@ -53,7 +53,7 @@ def upload_video(item: dict, video_path: str, config: dict) -> str:
     description = (
         f'🔮 {item["sign"]} | {item["language"]} Astrology Forecast\n\n'
         f'#{item["sign"]} #{item["language"]} #Astrology #DailyHoroscope #Shorts\n\n'
-        f'Astroverse — Daily cosmic guidance in your language.'
+        f'🌐 Get your full personal horoscope free at astroloz.com'
     )
 
     tags = list(yt_cfg.get("tags", [])) + [item["sign"], item["language"], "Shorts"]
