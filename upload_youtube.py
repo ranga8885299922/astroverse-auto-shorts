@@ -7,7 +7,26 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-SCOPES  = ["https://www.googleapis.com/auth/youtube.upload"]
+# ── Conversion CTA constants (edit here) ─────────────────────────────────────
+UTM_CAMPAIGN  = "daily"          # change to "weekly" in the weekly repo
+DESC_CTA_LINE = (
+    "👉 మీ పూర్తి జాతకం ఉచితంగా: "
+    f"https://astroloz.com/?utm_source=youtube&utm_medium=shorts&utm_campaign={UTM_CAMPAIGN}"
+)
+COMMENT_TEXT  = (
+    "🌟 మీ రాశి పూర్తి జాతకం, lucky time, remedies అన్నీ ఉచితంగా "
+    "👉 https://astroloz.com/?utm_source=youtube&utm_medium=shorts&utm_campaign=comment"
+)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# NOTE: youtube.force-ssl scope was added for commentThreads.insert.
+# ⚠️  If your token.pickle was created with only youtube.upload you MUST
+#     delete credentials/token.pickle and re-run locally once to re-authenticate
+#     so the new token includes both scopes.
+SCOPES  = [
+    "https://www.googleapis.com/auth/youtube.upload",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+]
 TOKEN   = "credentials/token.pickle"
 SECRETS = "credentials/client_secret.json"
 
@@ -51,6 +70,7 @@ def upload_video(item: dict, video_path: str, config: dict) -> str:
     title = title[:100]
 
     description = (
+        f'{DESC_CTA_LINE}\n\n'
         f'🔮 {item["sign"]} | {item["language"]} Astrology Forecast\n\n'
         f'#{item["sign"]} #{item["language"]} #Astrology #DailyHoroscope #Shorts\n\n'
         f'🌐 Get your full personal horoscope free at astroloz.com'
@@ -88,4 +108,28 @@ def upload_video(item: dict, video_path: str, config: dict) -> str:
             print(f"      Upload progress: {pct}%", end="\r")
 
     print()
-    return response["id"]
+    video_id = response["id"]
+
+    # Post the channel CTA comment (non-fatal — won't fail the pipeline)
+    try:
+        post_comment(yt, video_id)
+        print(f"      ✓ CTA comment posted")
+    except Exception as e:
+        print(f"      ⚠ Comment post failed (non-fatal): {e}")
+
+    return video_id
+
+
+def post_comment(yt, video_id: str) -> None:
+    """Post the channel-owner CTA comment on the newly uploaded video."""
+    yt.commentThreads().insert(
+        part="snippet",
+        body={
+            "snippet": {
+                "videoId": video_id,
+                "topLevelComment": {
+                    "snippet": {"textOriginal": COMMENT_TEXT}
+                },
+            }
+        },
+    ).execute()

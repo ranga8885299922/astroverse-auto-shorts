@@ -5,6 +5,13 @@ import datetime
 from zoneinfo import ZoneInfo
 from groq import Groq
 
+# ── Conversion CTA — spoken (gTTS audio) ─────────────────────────────────────
+# Inserted after the first ~1/6 of horoscope words so it lands ~10-15 s in,
+# before viewers drop off.  Write "dot com" so gTTS pronounces it clearly.
+CTA_SPOKEN = (
+    "మీ పూర్తి జాతకం, lucky time astroloz dot com లో ఉచితంగా చూడండి."
+)
+
 RASI_TELUGU = {
     "Aries":"మేష రాశి","Taurus":"వృషభ రాశి","Gemini":"మిథున రాశి",
     "Cancer":"కర్కాటక రాశి","Leo":"సింహ రాశి","Virgo":"కన్యా రాశి",
@@ -82,8 +89,16 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
                 if key not in obj or not obj[key]:
                     raise ValueError(f"Missing key: {key}")
 
-            # Append promo from config only if set
-            script = obj["script_telugu"]
+            # Build spoken audio script:
+            # 1. Insert early CTA after first ~1/6 of horoscope words (~10-15 s mark)
+            # 2. Append end-of-video promo from config
+            raw_words = obj["script_telugu"].split()
+            split_at  = max(1, len(raw_words) // 6)
+            script = (
+                " ".join(raw_words[:split_at])
+                + " " + CTA_SPOKEN
+                + " " + " ".join(raw_words[split_at:])
+            )
             if promo_telugu:
                 script = script + " " + promo_telugu
             obj["script"] = script

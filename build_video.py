@@ -18,6 +18,18 @@ except ImportError:
         CompositeVideoClip, ColorClip,
     )
 
+# ── Conversion CTA overlay constants (edit here) ─────────────────────────────
+CTA_SCREEN         = "👉 astroloz.com లో మీ పూర్తి జాతకం"
+CTA_ENDCARD        = "మరిన్ని వివరాలకు 🌐 astroloz.com"
+CTA_START          = 10          # seconds — mid-video CTA appears
+CTA_END            = 16          # seconds — mid-video CTA disappears
+CTA_ENDCARD_SECS   = 3           # seconds before video end the end-card shows
+CTA_FONT_SIZE      = 52          # NotoSansTelugu-Bold size for both CTA overlays
+CTA_BOX_Y          = 1380        # absolute Y pixel — top of CTA background box
+CTA_BOX_H          = 165         # height of CTA background box in pixels
+CTA_TEXT_Y_REL     = 0.724       # relative Y (0.0–1.0) for top of CTA text
+# ─────────────────────────────────────────────────────────────────────────────
+
 TELUGU_FONT_URL      = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansTelugu/NotoSansTelugu-Regular.ttf"
 TELUGU_FONT_BOLD_URL = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansTelugu/NotoSansTelugu-Bold.ttf"
 TELUGU_FONT_PATH     = "fonts/NotoSansTelugu-Regular.ttf"
@@ -186,6 +198,41 @@ def build_video(item, audio_path, config, out_dir):
         layers.append(make_text(part, tel_bold, 83, "#FFFFFF", W-40,
                                 ("center",0.375), part_dur,
                                 stroke_width=3, start=st))
+
+    # ═══════════════════════════════════════════
+    # MID-VIDEO CTA OVERLAY  (CTA_START → CTA_END seconds)
+    # Lower-third dark box + gold Telugu text
+    # ═══════════════════════════════════════════
+    if dur > CTA_END:
+        cta_dur = CTA_END - CTA_START
+        layers.append(
+            ColorClip(size=(W, CTA_BOX_H), color=(0, 0, 0))
+            .with_opacity(0.72)
+            .with_start(CTA_START).with_duration(cta_dur)
+            .with_position((0, CTA_BOX_Y))
+        )
+        layers.append(make_text(
+            CTA_SCREEN, tel_bold, CTA_FONT_SIZE, "#FFD700", W - 40,
+            ("center", CTA_TEXT_Y_REL), cta_dur,
+            stroke_color="#000000", stroke_width=3, start=CTA_START,
+        ))
+
+    # ═══════════════════════════════════════════
+    # END-CARD OVERLAY  (last CTA_ENDCARD_SECS seconds)
+    # Same lower-third slot — never conflicts with mid-CTA
+    # ═══════════════════════════════════════════
+    ec_start = max(dur - CTA_ENDCARD_SECS, float(HIGHLIGHT_SECS))
+    layers.append(
+        ColorClip(size=(W, CTA_BOX_H), color=(0, 0, 0))
+        .with_opacity(0.72)
+        .with_start(ec_start).with_duration(CTA_ENDCARD_SECS)
+        .with_position((0, CTA_BOX_Y))
+    )
+    layers.append(make_text(
+        CTA_ENDCARD, tel_bold, CTA_FONT_SIZE, "#FFD700", W - 40,
+        ("center", CTA_TEXT_Y_REL), CTA_ENDCARD_SECS,
+        stroke_color="#000000", stroke_width=3, start=ec_start,
+    ))
 
     # ═══════════════════════════════════════════
     # BOTTOM PROMO — stays till end, from config
