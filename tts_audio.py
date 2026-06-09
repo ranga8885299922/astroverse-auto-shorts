@@ -21,11 +21,15 @@ def synthesize(item: dict, out_dir: str) -> str:
     tts.save(mp3_path)
 
     import subprocess
-    result = subprocess.run(
-        ["ffmpeg", "-y", "-i", mp3_path, "-ar", "22050", "-ac", "1", wav_path],
-        capture_output=True
-    )
-    if result.returncode != 0:
+    try:
+        result = subprocess.run(
+            ["ffmpeg", "-y", "-i", mp3_path, "-ar", "22050", "-ac", "1", wav_path],
+            capture_output=True
+        )
+        if result.returncode != 0:
+            return mp3_path
+    except FileNotFoundError:
+        # ffmpeg not on PATH (e.g. local Windows dev) — use mp3 directly
         return mp3_path
     try:
         os.remove(mp3_path)

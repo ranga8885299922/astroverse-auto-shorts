@@ -6,10 +6,10 @@ from zoneinfo import ZoneInfo
 from groq import Groq
 
 # ── Conversion CTA — spoken (gTTS audio) ─────────────────────────────────────
-# Inserted after the first ~1/6 of horoscope words so it lands ~10-15 s in,
-# before viewers drop off.  Write "dot com" so gTTS pronounces it clearly.
+# Inserted at the first sentence boundary so it never cuts mid-sentence.
+# "dot com" so gTTS pronounces it clearly; link is in the pinned comment.
 CTA_SPOKEN = (
-    "మీ పూర్తి జాతకం, lucky time astroloz dot com లో ఉచితంగా చూడండి."
+    "మీ పూర్తి జాతకం astroloz dot com లో. లింక్ కింద కామెంట్‌లో ఉంది."
 )
 
 RASI_TELUGU = {
@@ -90,14 +90,18 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
                     raise ValueError(f"Missing key: {key}")
 
             # Build spoken audio script:
-            # 1. Insert early CTA after first ~1/6 of horoscope words (~10-15 s mark)
+            # 1. Insert CTA at the first sentence boundary (never mid-sentence)
             # 2. Append end-of-video promo from config
-            raw_words = obj["script_telugu"].split()
-            split_at  = max(1, len(raw_words) // 6)
+            raw = obj["script_telugu"]
+            boundary = next(
+                (i + 1 for i, ch in enumerate(raw) if ch in ("।", ".", "?", "!")),
+                len(raw),          # fallback: no boundary found → append at end
+            )
+            first_sentence = raw[:boundary].strip()
+            remainder      = raw[boundary:].strip()
             script = (
-                " ".join(raw_words[:split_at])
-                + " " + CTA_SPOKEN
-                + " " + " ".join(raw_words[split_at:])
+                first_sentence + " " + CTA_SPOKEN
+                + (" " + remainder if remainder else "")
             )
             if promo_telugu:
                 script = script + " " + promo_telugu
