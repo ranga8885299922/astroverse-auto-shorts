@@ -19,24 +19,19 @@ except ImportError:
     )
 
 # ── Conversion CTA overlay constants (edit here) ─────────────────────────────
-# Each overlay is 3 stacked clips:
-#   CTA_*_TEL1  — Telugu line above URL   (NotoSansTelugu-Bold)
-#   CTA_URL     — "astroloz.com" alone    (FONT_BOLD/Arial — Latin glyphs only)
-#   CTA_*_TEL2  — Telugu line below URL   (NotoSansTelugu-Bold)
-# Keeping Latin and Telugu in separate TextClips is required because
-# NotoSansTelugu has no Latin glyphs — mixing them renders boxes.
-CTA_URL            = "astroloz.com"
-CTA_SCREEN_TEL1    = "మీ పూర్తి జాతకం చూడండి"
-CTA_SCREEN_TEL2    = "లింక్ కామెంట్‌లో"
-CTA_ENDCARD_TEL1   = "మరిన్ని వివరాలకు"
-CTA_ENDCARD_TEL2   = "లింక్ కామెంట్‌లో"
-CTA_START          = 10          # seconds — mid-video CTA appears
-CTA_END            = 16          # seconds — mid-video CTA disappears
-CTA_ENDCARD_SECS   = 3           # seconds before video end the end-card shows
-CTA_BOX_Y          = 1380        # absolute Y pixel — top of CTA background box
+# ONE overlay only — at the hook (CTA_START → CTA_END). No end-card.
+# 3 stacked clips: Telugu | Latin (gold) | Telugu
+# NotoSansTelugu has no Latin glyphs, so Latin words use FONT_BOLD/Arial.
+# Telugu words use NotoSansTelugu-Bold. Never mix both in one TextClip.
+CTA_SCREEN_TEL1    = "మీ personal జాతకం"               # Telugu words  (NotoSansTelugu-Bold)
+CTA_SCREEN_LATIN   = "astroloz.com - completely free"   # Latin words   (FONT_BOLD/Arial, gold)
+CTA_SCREEN_TEL2    = "లింక్ కింద కామెంట్‌లో ఉంది"      # Telugu line 2 (NotoSansTelugu-Bold)
+CTA_START          = 10          # seconds — overlay appears
+CTA_END            = 16          # seconds — overlay disappears
+CTA_BOX_Y          = 1380        # absolute Y pixel — top of background box
 CTA_BOX_H          = 235         # height for 3-line layout
 CTA_TEL1_Y_REL     = 0.724       # top of Telugu line 1  (≈ y 1390)
-CTA_URL_Y_REL      = 0.750       # top of astroloz.com   (≈ y 1440)
+CTA_LATIN_Y_REL    = 0.750       # top of Latin line     (≈ y 1440)
 CTA_TEL2_Y_REL     = 0.787       # top of Telugu line 2  (≈ y 1511)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -109,24 +104,24 @@ def split_script(script, num_parts=NUM_PARTS):
         parts.append("\n".join(textwrap.wrap(" ".join(words[s:e]), width=20)))
     return parts
 
-def _make_cta_overlay(tel1, tel2, start, duration, W, tel_bold, font_bold):
+def _make_cta_overlay(tel1, latin_line, tel2, start, duration, W, tel_bold, font_bold):
     """
-    Returns a list of 4 layers for one CTA overlay:
-      dark bg box | Telugu line 1 | astroloz.com (Latin font) | Telugu line 2
-    Latin and Telugu are in separate TextClips so each uses the right font.
+    Returns 4 layers: dark bg box | Telugu line 1 | Latin line (gold) | Telugu line 2.
+    Latin and Telugu are in separate TextClips — NotoSansTelugu has no Latin glyphs.
+    tel1/tel2 use tel_bold (NotoSansTelugu-Bold); latin_line uses font_bold (Arial).
     """
     return [
         ColorClip(size=(W, CTA_BOX_H), color=(0, 0, 0))
             .with_opacity(0.72)
             .with_start(start).with_duration(duration)
             .with_position((0, CTA_BOX_Y)),
-        make_text(tel1, tel_bold, 42, "#FFFFFF", W - 40,
+        make_text(tel1, tel_bold, 44, "#FFFFFF", W - 40,
                   ("center", CTA_TEL1_Y_REL), duration,
                   stroke_width=2, start=start),
-        make_text(CTA_URL, font_bold, 55, "#FFD700", W - 40,
-                  ("center", CTA_URL_Y_REL), duration,
+        make_text(latin_line, font_bold, 46, "#FFD700", W - 40,
+                  ("center", CTA_LATIN_Y_REL), duration,
                   stroke_color="#000000", stroke_width=3, start=start),
-        make_text(tel2, tel_bold, 38, "#FFFFFF", W - 40,
+        make_text(tel2, tel_bold, 40, "#FFFFFF", W - 40,
                   ("center", CTA_TEL2_Y_REL), duration,
                   stroke_width=2, start=start),
     ]
@@ -233,24 +228,16 @@ def build_video(item, audio_path, config, out_dir):
                                 stroke_width=3, start=st))
 
     # ═══════════════════════════════════════════
-    # MID-VIDEO CTA OVERLAY  (CTA_START → CTA_END seconds)
-    # 3-layer: Telugu line | astroloz.com (Latin) | Telugu line
+    # HOOK CTA OVERLAY  (CTA_START → CTA_END seconds)
+    # 3-layer: Telugu | Latin (gold) | Telugu
+    # Only one CTA — no end-card.
     # ═══════════════════════════════════════════
     if dur > CTA_END:
         cta_dur = CTA_END - CTA_START
         layers.extend(_make_cta_overlay(
-            CTA_SCREEN_TEL1, CTA_SCREEN_TEL2,
+            CTA_SCREEN_TEL1, CTA_SCREEN_LATIN, CTA_SCREEN_TEL2,
             CTA_START, cta_dur, W, tel_bold, FONT_BOLD,
         ))
-
-    # ═══════════════════════════════════════════
-    # END-CARD OVERLAY  (last CTA_ENDCARD_SECS seconds)
-    # ═══════════════════════════════════════════
-    ec_start = max(dur - CTA_ENDCARD_SECS, float(HIGHLIGHT_SECS))
-    layers.extend(_make_cta_overlay(
-        CTA_ENDCARD_TEL1, CTA_ENDCARD_TEL2,
-        ec_start, CTA_ENDCARD_SECS, W, tel_bold, FONT_BOLD,
-    ))
 
     # ═══════════════════════════════════════════
     # BOTTOM PROMO — stays till end, from config

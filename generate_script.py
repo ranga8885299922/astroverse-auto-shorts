@@ -9,7 +9,8 @@ from groq import Groq
 # Inserted at the first sentence boundary so it never cuts mid-sentence.
 # "dot com" so gTTS pronounces it clearly; link is in the pinned comment.
 CTA_SPOKEN = (
-    "మీ పూర్తి జాతకం astroloz dot com లో. లింక్ కింద కామెంట్‌లో ఉంది."
+    "మీ personal జాతకం astroloz dot com లో completely free."
+    " లింక్ కింద కామెంట్‌లో ఉంది."
 )
 
 RASI_TELUGU = {
