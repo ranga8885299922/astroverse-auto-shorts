@@ -33,7 +33,7 @@ def _get_ist_dates():
     date_short = tomorrow.strftime("%b %d %Y")
     return today_str, date_short
 
-def _call_groq(client, sign, languages, theme, tone, promo_telugu) -> list[dict]:
+def _call_groq(client, sign, languages, theme, tone) -> list[dict]:
     today, date_short = _get_ist_dates()
     lang        = languages[0]
     rasi_telugu = RASI_TELUGU.get(sign, sign)
@@ -91,22 +91,18 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
                     raise ValueError(f"Missing key: {key}")
 
             # Build spoken audio script:
-            # 1. Insert CTA at the first sentence boundary (never mid-sentence)
-            # 2. Append end-of-video promo from config
+            # Insert CTA at the first sentence boundary (never mid-sentence)
             raw = obj["script_telugu"]
             boundary = next(
                 (i + 1 for i, ch in enumerate(raw) if ch in ("।", ".", "?", "!")),
-                len(raw),          # fallback: no boundary found → append at end
+                len(raw),
             )
             first_sentence = raw[:boundary].strip()
             remainder      = raw[boundary:].strip()
-            script = (
+            obj["script"] = (
                 first_sentence + " " + CTA_SPOKEN
                 + (" " + remainder if remainder else "")
             )
-            if promo_telugu:
-                script = script + " " + promo_telugu
-            obj["script"] = script
 
             obj["rasi_telugu"] = obj.get("rasi_telugu", rasi_telugu)
             return [obj]
@@ -136,12 +132,10 @@ def generate_scripts(config: dict) -> list[dict]:
     languages    = config["languages"]
     theme        = config["daily_theme"]
     tone         = config["tone"]
-    promo_telugu = config.get("promo_telugu", "")  # Read from config
-
     all_scripts = []
     for i, sign in enumerate(signs, 1):
         print(f"  → Sign {i}/{len(signs)}: {sign}...")
-        results = _call_groq(client, sign, languages, theme, tone, promo_telugu)
+        results = _call_groq(client, sign, languages, theme, tone)
         all_scripts.extend(results)
         if i < len(signs):
             time.sleep(4)

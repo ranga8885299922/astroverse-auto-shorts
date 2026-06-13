@@ -147,11 +147,6 @@ def build_video(item, audio_path, config, out_dir):
     vc   = config["video"]
     W, H = vc["width"], vc["height"]
 
-    # Read promo from config
-    promo_website     = config.get("promo_website", "").strip()
-    promo_display     = config.get("promo_display_telugu", "").strip()
-    show_promo        = bool(promo_website or promo_display)
-
     ist_now  = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
     tomorrow = ist_now + datetime.timedelta(days=1)
     date_str = tomorrow.strftime("%b %d %Y")
@@ -238,38 +233,6 @@ def build_video(item, audio_path, config, out_dir):
             CTA_SCREEN_TEL1, CTA_SCREEN_LATIN, CTA_SCREEN_TEL2,
             CTA_START, cta_dur, W, tel_bold, FONT_BOLD,
         ))
-
-    # ═══════════════════════════════════════════
-    # BOTTOM PROMO — stays till end, from config
-    # astroloz.com bold + Telugu display text
-    # ═══════════════════════════════════════════
-    if show_promo:
-        bottom_h = 260
-        bar_y    = H - bottom_h          # 1660 px from top
-        # relative positions (0.0–1.0 of H=1920):
-        #   astroloz.com centre  → bar_y + 65  = 1725 → 0.898
-        #   Telugu text centre   → bar_y + 175 = 1835 → 0.956
-        layers.append(
-            ColorClip(size=(W, bottom_h), color=(0,0,0))
-            .with_opacity(0.75).with_duration(main_dur).with_start(main_start)
-            .with_position((0, bar_y))
-        )
-
-        # astroloz.com — big bold gold (inside the dark bar)
-        if promo_website:
-            layers.append(make_text(
-                promo_website, FONT_BOLD, 55, "#FFD700", W-40,
-                ("center", 0.898), main_dur,
-                stroke_color="#000000", stroke_width=4, start=main_start,
-            ))
-
-        # Telugu display text — NotoSansTelugu font, inside the dark bar
-        if promo_display:
-            layers.append(make_text(
-                promo_display, tel_reg, 32, "#FFFFFF", W-60,
-                ("center", 0.950), main_dur,
-                stroke_width=2, start=main_start,
-            ))
 
     final = CompositeVideoClip(layers).with_audio(audio)
     slug  = f'{item["sign"]}_{item["language"]}'.replace(" ","_").lower()
