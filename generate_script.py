@@ -28,7 +28,7 @@ SIGN_SYMBOLS = {
 
 def _get_ist_dates():
     ist_now    = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    tomorrow   = ist_now + datetime.timedelta(days=1)
+    tomorrow   = ist_now + datetime.timedelta(days=0)
     today_str  = tomorrow.strftime("%B %d, %Y")
     date_short = tomorrow.strftime("%b %d %Y")
     return today_str, date_short
