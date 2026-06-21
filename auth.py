@@ -54,7 +54,7 @@ def main() -> None:
     with open(token_path, "wb") as f:
         pickle.dump(creds, f)
 
-    print(f"\n✅  Token saved to '{TOKEN}'")
+    print(f"\nOK  Token saved to '{TOKEN}'")
     print(f"    Scopes granted : {creds.scopes}")
     print(f"    Token expiry   : {creds.expiry}")
     print()

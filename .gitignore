@@ -9,6 +9,9 @@ instagram/
 *.wav
 *.mp4
 
+# Auto-downloaded fonts (ensure_fonts() re-downloads in CI)
+fonts/
+
 # Python
 __pycache__/
 *.pyc
