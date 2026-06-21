@@ -13,6 +13,12 @@ CTA_SPOKEN = (
     " లింక్ కింద కామెంట్‌లో ఉంది."
 )
 
+# ── YouTube title — Telugu-first with a curiosity hook (edit here) ────────────
+# Telugu viewers search in Telugu script; an English-only generic title gets
+# buried by the algorithm. {rasi}=Telugu rasi name, {date}=short date.
+# Keep under 100 chars (YouTube hard limit).
+TITLE_TEMPLATE = "{rasi}: ఈరోజు ఏం జరగబోతుంది? {date} 🔮 రాశి ఫలాలు #shorts"
+
 RASI_TELUGU = {
     "Aries":"మేష రాశి","Taurus":"వృషభ రాశి","Gemini":"మిథున రాశి",
     "Cancer":"కర్కాటక రాశి","Leo":"సింహ రాశి","Virgo":"కన్యా రాశి",
@@ -47,7 +53,7 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
   "rasi_telugu": "{rasi_telugu}",
   "language": "{lang['name']}",
   "language_code": "{lang['code']}",
-  "highlight_telugu": "Single most positive powerful statement in pure Telugu script for {sign} on {today}. Max 12 words. Must be Telugu script. Most exciting positive thing today.",
+  "highlight_telugu": "ONE dramatic, exciting prediction in pure Telugu script — this is the VIDEO THUMBNAIL, it must stop the scroll. Max 8 words. Present tense. NO hedging words like 'maybe/might/possibly'. Make viewers desperate to know more.",
   "script_telugu": "Write 250 word horoscope in pure Telugu script. Cover: active planet, career, money, love, health, 1 risk + prayer remedy, lucky color+number, closing blessing.",
   "title_en": "{sign} - {date_short} | Telugu Daily Horoscope"
 }}"""
@@ -105,6 +111,11 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
             )
 
             obj["rasi_telugu"] = obj.get("rasi_telugu", rasi_telugu)
+
+            # Telugu-first YouTube title with a curiosity hook (better CTR)
+            obj["title_yt"] = TITLE_TEMPLATE.format(
+                rasi=obj["rasi_telugu"], date=date_short
+            )[:100]
             return [obj]
 
         except json.JSONDecodeError as e:

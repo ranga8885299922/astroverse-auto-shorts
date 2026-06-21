@@ -2,12 +2,16 @@
 Astroverse Auto-Shorts — Main Orchestrator
 ==========================================
 Runs the full pipeline:
-  1. Generate 72 scripts via Gemini
+  1. Generate 12 scripts via Groq (llama-3.3-70b)
   2. For each script:
-     a. Synthesise audio (Sarvam TTS)
+     a. Synthesise audio (gTTS)
      b. Build 9:16 video (MoviePy)
      c. Upload to YouTube
-  3. Log every result to logs/run_log.csv
+  3. Optimise all videos for Instagram → instagram/ folder (for offline download)
+  4. Log every result to logs/run_log.csv
+
+Storage note: output/ and instagram/ are CLEARED at the start of every run so
+old videos never pile up on disk (important for mobile / limited storage).
 """
 
 import json
@@ -16,14 +20,25 @@ import csv
 import datetime
 import traceback
 import os
+import shutil
 
-from generate_script import generate_scripts
-from tts_audio        import synthesize
-from build_video      import build_video
-from upload_youtube   import upload_video
+from generate_script    import generate_scripts
+from tts_audio          import synthesize
+from build_video        import build_video
+from upload_youtube     import upload_video
+from optimize_instagram import optimize_for_instagram
 
-OUT_DIR  = "output"
-LOG_FILE = "logs/run_log.csv"
+OUT_DIR   = "output"      # YouTube-bound renders
+INSTA_DIR = "instagram"   # Instagram-optimised copies (downloaded as artifact)
+LOG_FILE  = "logs/run_log.csv"
+
+
+def clear_dir(path: str):
+    """Delete a folder and recreate it empty — clears yesterday's videos."""
+    p = pathlib.Path(path)
+    if p.exists():
+        shutil.rmtree(p, ignore_errors=True)
+    p.mkdir(parents=True, exist_ok=True)
 
 # ── Daily theme rotation (optional — overrides config.json if enabled) ────────
 THEME_ROTATION = {
@@ -63,11 +78,13 @@ def main():
         config["daily_theme"] = THEME_ROTATION[weekday]
         print(f"  Theme : {config['daily_theme']}")
 
-    # Ensure output folder exists
-    pathlib.Path(OUT_DIR).mkdir(exist_ok=True)
+    # Clear yesterday's videos so storage never fills up (mobile-friendly)
+    print("\n  🧹 Clearing old videos from output/ and instagram/ ...")
+    clear_dir(OUT_DIR)
+    clear_dir(INSTA_DIR)
 
     # ── Step 1: Generate scripts ──────────────────────────────────────────────
-    print("\n[1/4] Generating scripts via Gemini...")
+    print("\n[1/4] Generating scripts via Groq...")
     items = generate_scripts(config)
     total = len(items)
     print(f"      ✓ {total} scripts ready\n")
@@ -120,15 +137,27 @@ def main():
             traceback.print_exc()
 
         finally:
-            # Clean up temp files regardless of success/failure
-            for p in [audio_path, video_path]:
-                if p and pathlib.Path(p).exists():
-                    try:
-                        os.remove(p)
-                    except Exception:
-                        pass
+            # Delete only the audio temp file. KEEP the video — it is needed
+            # for the Instagram optimisation / offline-download step below.
+            if audio_path and pathlib.Path(audio_path).exists():
+                try:
+                    os.remove(audio_path)
+                except Exception:
+                    pass
 
         log_entry(entry)
+
+    # ── Step 5: Optimise every rendered video for Instagram ───────────────────
+    print("\n[+] Optimising videos for Instagram → instagram/ ...")
+    insta_count = 0
+    for mp4 in sorted(pathlib.Path(OUT_DIR).glob("*.mp4")):
+        try:
+            out = optimize_for_instagram(str(mp4), INSTA_DIR)
+            insta_count += 1
+            print(f"      ✓ {pathlib.Path(out).name}")
+        except Exception as e:
+            print(f"      ⚠ Instagram optimise failed for {mp4.name}: {e}")
+    print(f"      {insta_count} video(s) ready in '{INSTA_DIR}/' for download")
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)

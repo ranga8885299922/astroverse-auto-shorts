@@ -65,18 +65,31 @@ def upload_video(item: dict, video_path: str, config: dict) -> str:
     yt     = get_youtube_client()
     yt_cfg = config["youtube"]
 
-    title = item.get("title_en", f'{item["sign"]} {item["language"]} Astrology #Shorts')
-    # YouTube title limit is 100 chars
-    title = title[:100]
+    # Telugu-first title (title_yt) gives better CTR than English-only.
+    # Fall back to title_en then a generic title.
+    title = item.get("title_yt") or item.get("title_en") \
+        or f'{item["sign"]} {item["language"]} Astrology #Shorts'
+    title = title[:100]  # YouTube hard limit
 
+    rasi  = item.get("rasi_telugu", item["sign"])
+    theme = config.get("daily_theme", "")
+
+    # Keyword-rich description — YouTube search indexes this text.
+    # Telugu keywords + the CTA link as first line for click-through.
     description = (
         f'{DESC_CTA_LINE}\n\n'
-        f'🔮 {item["sign"]} | {item["language"]} Astrology Forecast\n\n'
-        f'#{item["sign"]} #{item["language"]} #Astrology #DailyHoroscope #Shorts\n\n'
+        f'🔮 {rasi} ఈరోజు రాశి ఫలాలు | {item["sign"]} Daily Horoscope in Telugu\n\n'
+        f'ఈరోజు మీ రాశి ఫలాలు, లక్కీ నంబర్, లక్కీ కలర్, కెరీర్, ప్రేమ, '
+        f'ఆరోగ్యం, ధనం గురించి పూర్తి వివరాలు. మీ పూర్తి జాతకం ఉచితంగా '
+        f'astroloz.com లో పొందండి.\n\n'
+        f'#{item["sign"]} #రాశిఫలాలు #TeluguHoroscope #Astrology '
+        f'#DailyHoroscope #జ్యోతిష్యం #astroloz #Shorts\n\n'
         f'🌐 Get your full personal horoscope free at astroloz.com'
     )
 
-    tags = list(yt_cfg.get("tags", [])) + [item["sign"], item["language"], "Shorts"]
+    # Tags: base + daily theme + sign-specific Telugu + generic
+    daily_tags = [t for t in (theme, f'{rasi} ఫలాలు', f'{item["sign"]} horoscope today') if t]
+    tags = list(yt_cfg.get("tags", [])) + daily_tags + [item["sign"], item["language"], "Shorts"]
 
     body = {
         "snippet": {

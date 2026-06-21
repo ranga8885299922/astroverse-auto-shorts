@@ -5,6 +5,7 @@ credentials/token_b64.txt
 
 # Temp output
 output/
+instagram/
 *.wav
 *.mp4
 
