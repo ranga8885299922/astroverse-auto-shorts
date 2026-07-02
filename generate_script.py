@@ -13,11 +13,21 @@ CTA_SPOKEN = (
     " లింక్ కింద కామెంట్‌లో ఉంది."
 )
 
-# ── YouTube title — Telugu-first with a curiosity hook (edit here) ────────────
-# Telugu viewers search in Telugu script; an English-only generic title gets
-# buried by the algorithm. {rasi}=Telugu rasi name, {date}=short date.
-# Keep under 100 chars (YouTube hard limit).
-TITLE_TEMPLATE = "{rasi}: ఈరోజు ఏం జరగబోతుంది? {date} 🔮 రాశి ఫలాలు #shorts"
+# ── YouTube title — hook line as title (edit here) ───────────────────────────
+# The dramatic highlight_telugu (same text as the 0-5s thumbnail card) becomes
+# the title, so thumbnail and title reinforce each other. The suffix keeps the
+# "రాశి ఫలాలు" search keyword. Total capped at 100 chars (YouTube hard limit);
+# the highlight is truncated first, never the rasi/date suffix.
+TITLE_SUFFIX_TEMPLATE = " | {rasi} ఫలాలు {date}"
+
+
+def build_title(highlight: str, rasi: str, date_short: str) -> str:
+    suffix = TITLE_SUFFIX_TEMPLATE.format(rasi=rasi, date=date_short)
+    hl     = " ".join(highlight.split())          # collapse newlines/spaces
+    max_hl = 100 - len(suffix)
+    if len(hl) > max_hl:
+        hl = hl[:max_hl - 1].rstrip() + "…"
+    return hl + suffix
 
 RASI_TELUGU = {
     "Aries":"మేష రాశి","Taurus":"వృషభ రాశి","Gemini":"మిథున రాశి",
@@ -45,7 +55,7 @@ def _call_groq(client, sign, languages, theme, tone) -> list[dict]:
     rasi_telugu = RASI_TELUGU.get(sign, sign)
     symbol      = SIGN_SYMBOLS.get(sign, "🔮")
 
-    prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}.
+    prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}. Theme of the day: {theme}. Tone: {tone}.
 
 Return ONLY this JSON object. Start with {{ end with }}. No text outside:
 {{
@@ -53,10 +63,18 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
   "rasi_telugu": "{rasi_telugu}",
   "language": "{lang['name']}",
   "language_code": "{lang['code']}",
-  "highlight_telugu": "ONE dramatic, exciting prediction in pure Telugu script — this is the VIDEO THUMBNAIL, it must stop the scroll. Max 8 words. Present tense. NO hedging words like 'maybe/might/possibly'. Make viewers desperate to know more.",
-  "script_telugu": "Write 250 word horoscope in pure Telugu script. Cover: active planet, career, money, love, health, 1 risk + prayer remedy, lucky color+number, closing blessing.",
+  "highlight_telugu": "ONE dramatic, exciting prediction in pure Telugu script — this is the VIDEO THUMBNAIL AND TITLE, it must stop the scroll. MUST be a COMPLETE sentence of 5 to 8 words (never fewer than 5). Present tense. NO hedging words like 'maybe/might/possibly'. Make viewers desperate to know more.",
+  "script_telugu": "250 word horoscope in pure Telugu script. FIRST SENTENCE = a shocking curiosity hook about today's single biggest event for this rasi (viewers decide to stay in 3 seconds) — NEVER start with a greeting like నమస్కారం or 'ఈరోజు మీకు'. Then cover in order: active planet position, career, money, love/family, health, 1 risk warning, 1 remedy, lucky color + lucky number, one-line closing blessing.",
   "title_en": "{sign} - {date_short} | Telugu Daily Horoscope"
-}}"""
+}}
+
+SPECIFICITY RULES for script_telugu — every prediction must be SPECIFIC with concrete details. NEVER write generic one-line predictions:
+- HEALTH: name a specific body part or condition + a concrete action. Like "గొంతు సంబంధిత సమస్యలు వచ్చే అవకాశం ఉంది, చల్లని పదార్థాలు తగ్గించండి" or "కంటి ఒత్తిడి పెరగవచ్చు, స్క్రీన్ సమయం తగ్గించండి". NOT "ఆరోగ్యం జాగ్రత్త".
+- MONEY: name the specific source or situation. Like "పాత బాకీలు తిరిగి వస్తాయి" or "రియల్ ఎస్టేట్ పెట్టుబడికి అనుకూల సమయం" or "అనవసర ఖర్చులు మధ్యాహ్నం తర్వాత జాగ్రత్త". NOT "ధన లాభం".
+- CAREER: name the specific work situation. Like "పై అధికారుల నుండి ప్రశంసలు లభిస్తాయి" or "కొత్త ప్రాజెక్ట్ బాధ్యత మీకు అప్పగించబడుతుంది" or "సహోద్యోగులతో మాట పట్టింపులకు పోవద్దు". NOT "ఉద్యోగంలో మంచి రోజు".
+- LOVE/FAMILY: name the specific person or event. Like "జీవిత భాగస్వామి మద్దతుతో ఒక ముఖ్యమైన సమస్య నుండి బయటపడతారు" or "పిల్లల చదువు విషయంలో శుభవార్త వింటారు". NOT "కుటుంబం బాగుంటుంది".
+- REMEDY: name a specific deity + day + action. Like "మంగళవారం ఆంజనేయస్వామికి సింధూరం సమర్పించండి" or "శుక్రవారం లక్ష్మీ దేవికి తామర పువ్వులు సమర్పించండి". NOT "దేవుడిని ప్రార్థించండి".
+Vary the specifics daily so each day feels fresh and personally written by a real astrologer."""
 
     last_error = None
     for attempt in range(3):
@@ -66,11 +84,11 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
                 messages=[
                     {
                         "role": "system",
-                        "content": "Expert Vedic astrologer. Write ALL content in pure Telugu unicode script. Return ONLY raw JSON starting with { ending with }. No markdown."
+                        "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Telugu unicode script. Every prediction must be SPECIFIC with concrete details — specific body parts for health, specific money sources, specific work situations, specific family members, specific deities and days for remedies. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.7,
+                temperature=0.85,
                 max_tokens=3000,
             )
 
@@ -96,26 +114,27 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
                 if key not in obj or not obj[key]:
                     raise ValueError(f"Missing key: {key}")
 
-            # Build spoken audio script:
-            # Insert CTA at the first sentence boundary (never mid-sentence)
+            # Build spoken audio script.
+            # Sentence 1 is now the HOOK, so the CTA goes after the SECOND
+            # sentence boundary — hook lands 0-5s, CTA ~10s (matches the
+            # 10-16s on-screen overlay). Never cuts mid-sentence.
             raw = obj["script_telugu"]
-            boundary = next(
-                (i + 1 for i, ch in enumerate(raw) if ch in ("।", ".", "?", "!")),
-                len(raw),
-            )
-            first_sentence = raw[:boundary].strip()
-            remainder      = raw[boundary:].strip()
+            boundaries = [i + 1 for i, ch in enumerate(raw)
+                          if ch in ("।", ".", "?", "!")]
+            cut = boundaries[1] if len(boundaries) >= 2 else (
+                  boundaries[0] if boundaries else len(raw))
+            head = raw[:cut].strip()
+            tail = raw[cut:].strip()
             obj["script"] = (
-                first_sentence + " " + CTA_SPOKEN
-                + (" " + remainder if remainder else "")
+                head + " " + CTA_SPOKEN + (" " + tail if tail else "")
             )
 
             obj["rasi_telugu"] = obj.get("rasi_telugu", rasi_telugu)
 
-            # Telugu-first YouTube title with a curiosity hook (better CTR)
-            obj["title_yt"] = TITLE_TEMPLATE.format(
-                rasi=obj["rasi_telugu"], date=date_short
-            )[:100]
+            # Hook line as YouTube title (thumbnail text = title = one message)
+            obj["title_yt"] = build_title(
+                obj["highlight_telugu"], obj["rasi_telugu"], date_short
+            )
             return [obj]
 
         except json.JSONDecodeError as e:

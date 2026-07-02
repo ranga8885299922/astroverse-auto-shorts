@@ -65,6 +65,15 @@ More languages × More platforms × Daily cadence × Strong CTA = Max visitors
 ### Phase B — Optimise for algorithm (next 30 days)
 These are code changes — implement one at a time, test with one sign first.
 
+**SHIPPED 2026-06-21:**
+- [x] **Hook line = title** — `build_title()` in `generate_script.py`: `"{highlight} | {rasi} ఫలాలు {date}"`, highlight truncated to keep total ≤100 chars. Thumbnail text and title now say the same thing (B1 superseded).
+- [x] **Specific predictions** — Groq prompt now enforces concrete details per category (body part for health, money source, work situation, family member, deity+day for remedy); temperature 0.7→0.85 for daily variety
+- [x] **Audio hook first** — script_telugu must START with the curiosity hook, no greeting; spoken CTA moved to after the SECOND sentence so it still lands ~10s (aligned with 10–16s overlay)
+- [x] **Description SEO v2** — hook + link above the fold, covered-topics list, Telugu keyword paragraph, 5 hashtags
+- [x] **Tag engine** — per-sign transliteration tags (SIGN_TAGS_EN), trending-format tags, dedup + 470-char cap (YouTube limit 500)
+- [x] **defaultLanguage/defaultAudioLanguage = "te"** — better recommendation targeting
+- [x] **config.json cleanup** — removed dead promo_* keys (code no longer reads them)
+
 **SHIPPED 2026-06-14 (commit pending):**
 - [x] **Telugu-first title** with curiosity hook — `TITLE_TEMPLATE` in `generate_script.py`
       → `"{rasi}: ఈరోజు ఏం జరగబోతుంది? {date} 🔮 రాశి ఫలాలు #shorts"` (was English-only, killing CTR)

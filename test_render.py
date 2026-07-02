@@ -36,6 +36,7 @@ def main():
     print(f"\n  Sign        : {item['sign']}")
     print(f"  Rasi        : {item.get('rasi_telugu', '')}")
     print(f"  Highlight   : {item.get('highlight_telugu', '')}")
+    print(f"  YT Title    : {item.get('title_yt', '')}  ({len(item.get('title_yt',''))} chars)")
     print(f"\n  Audio script preview (first 200 chars):")
     print(f"  {item['script'][:200]}...")
 

@@ -113,7 +113,7 @@ def main():
 
         try:
             # 2. TTS
-            print(f"        → Sarvam TTS...")
+            print(f"        → gTTS audio...")
             audio_path = synthesize(item, OUT_DIR)
 
             # 3. Build video
