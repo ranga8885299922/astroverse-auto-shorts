@@ -49,13 +49,38 @@ def _get_ist_dates():
     date_short = tomorrow.strftime("%b %d %Y")
     return today_str, date_short
 
-def _call_groq(client, sign, languages, theme, tone) -> list[dict]:
+def _build_grounding_block(g: dict | None) -> str:
+    """Format BPHS sutras from Supabase into a prompt section (empty if none)."""
+    if not g:
+        return ""
+    lines = [
+        "",
+        f"CLASSICAL GROUNDING — Today's vara lord is {g['planet']} ({g['planet_te']}).",
+        "Base the predictions on these authentic Parashara (BPHS) sutras. Adapt them "
+        "into DAILY transit-style predictions — NEVER copy natal life-outcomes verbatim. "
+        "Mention \"పరాశర మహర్షి ప్రకారం\" exactly once in the script for authority.",
+    ]
+    for i, s in enumerate(g["sutras"], 1):
+        lines.append(f"Sutra {i}: {s}")
+    if g.get("caution"):
+        lines.append(
+            f"Caution basis (soften into ONE mild 'జాగ్రత్త' tip, keep it gentle): {g['caution']}"
+        )
+    if g.get("remedy"):
+        lines.append(
+            f"Use THIS as today's remedy (classical Parashara remedy, adapt wording): {g['remedy']}"
+        )
+    return "\n".join(lines)
+
+
+def _call_groq(client, sign, languages, theme, tone, grounding=None) -> list[dict]:
     today, date_short = _get_ist_dates()
     lang        = languages[0]
     rasi_telugu = RASI_TELUGU.get(sign, sign)
     symbol      = SIGN_SYMBOLS.get(sign, "🔮")
 
     prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}. Theme of the day: {theme}. Tone: {tone}.
+{_build_grounding_block(grounding)}
 
 Return ONLY this JSON object. Start with {{ end with }}. No text outside:
 {{
@@ -156,7 +181,7 @@ Vary the specifics daily so each day feels fresh and personally written by a rea
     raise RuntimeError(f"Failed after 3 attempts for {sign}. Last: {last_error}")
 
 
-def generate_scripts(config: dict) -> list[dict]:
+def generate_scripts(config: dict, grounding: dict | None = None) -> list[dict]:
     client       = Groq(api_key=os.environ["GROQ_API_KEY"])
     signs        = config["signs"]
     languages    = config["languages"]
@@ -165,7 +190,8 @@ def generate_scripts(config: dict) -> list[dict]:
     all_scripts = []
     for i, sign in enumerate(signs, 1):
         print(f"  → Sign {i}/{len(signs)}: {sign}...")
-        results = _call_groq(client, sign, languages, theme, tone)
+        sign_grounding = grounding.get(sign) if grounding else None
+        results = _call_groq(client, sign, languages, theme, tone, sign_grounding)
         all_scripts.extend(results)
         if i < len(signs):
             time.sleep(4)

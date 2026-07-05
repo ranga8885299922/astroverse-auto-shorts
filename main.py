@@ -27,6 +27,8 @@ from tts_audio          import synthesize
 from build_video        import build_video
 from upload_youtube     import upload_video
 from optimize_instagram import optimize_for_instagram
+from fetch_bphs         import fetch_bphs_grounding
+from post_instagram     import post_to_instagram, instagram_enabled
 
 OUT_DIR   = "output"      # YouTube-bound renders
 INSTA_DIR = "instagram"   # Instagram-optimised copies (downloaded as artifact)
@@ -83,9 +85,12 @@ def main():
     clear_dir(OUT_DIR)
     clear_dir(INSTA_DIR)
 
-    # ── Step 1: Generate scripts ──────────────────────────────────────────────
+    # ── Step 1: Generate scripts (grounded in Parashara/BPHS rules DB) ────────
+    print("\n[1/4] Fetching BPHS grounding from Supabase...")
+    grounding = fetch_bphs_grounding(config["signs"])   # None → plain LLM mode
+
     print("\n[1/4] Generating scripts via Groq...")
-    items = generate_scripts(config)
+    items = generate_scripts(config, grounding)
     total = len(items)
     print(f"      ✓ {total} scripts ready\n")
 
@@ -147,9 +152,18 @@ def main():
 
         log_entry(entry)
 
-    # ── Step 5: Optimise every rendered video for Instagram ───────────────────
+    # ── Step 5: Optimise for Instagram + auto-publish Reels ───────────────────
     print("\n[+] Optimising videos for Instagram → instagram/ ...")
+    slug_to_item = {
+        f'{it["sign"]}_{it["language"]}'.replace(" ", "_").lower(): it
+        for it in items
+    }
+    ig_on = instagram_enabled()
+    if not ig_on:
+        print("      (IG auto-publish off — IG_USER_ID/IG_ACCESS_TOKEN/SUPABASE_* not set)")
+
     insta_count = 0
+    ig_posted   = 0
     for mp4 in sorted(pathlib.Path(OUT_DIR).glob("*.mp4")):
         try:
             out = optimize_for_instagram(str(mp4), INSTA_DIR)
@@ -157,7 +171,21 @@ def main():
             print(f"      ✓ {pathlib.Path(out).name}")
         except Exception as e:
             print(f"      ⚠ Instagram optimise failed for {mp4.name}: {e}")
-    print(f"      {insta_count} video(s) ready in '{INSTA_DIR}/' for download")
+            continue
+
+        if ig_on:
+            item = slug_to_item.get(mp4.stem)
+            if item:
+                try:
+                    media_id = post_to_instagram(item, out)
+                    if media_id:
+                        ig_posted += 1
+                        print(f"        ✓ Reel published (media {media_id})")
+                except Exception as e:
+                    print(f"        ⚠ Reel publish failed (non-fatal): {e}")
+
+    print(f"      {insta_count} video(s) ready in '{INSTA_DIR}/' for download"
+          + (f", {ig_posted} Reel(s) auto-published" if ig_on else ""))
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)

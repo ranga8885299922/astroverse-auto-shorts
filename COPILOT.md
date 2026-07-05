@@ -179,7 +179,26 @@ Videos can't land on the phone automatically, so:
 add `post_telegram.py` that sends each `instagram/*.mp4` to a chat via bot
 token. Videos arrive in Telegram, tap to save → share to Instagram. No zip.
 
-## 5. Instagram Reels Plan — DIRECT auto-post (activate when YouTube Telugu hits ~5K subscribers)
+## 4.6. Instagram auto-publish — LIVE (SHIPPED 2026-07-05)
+
+Working end-to-end; first Reel published (media 18068708483416684).
+
+- **Flow**: "Instagram API with Instagram Login" (no Facebook Page needed).
+  Meta app "Astroloz Publisher" (2087106505232682), IG app "Astroloz
+  Publisher-IG" (1900446578007837), account @astroloz_com
+  (IG user 17841424581244877, BUSINESS).
+- `post_instagram.py` → graph.instagram.com `/me/media` + `/me/media_publish`;
+  video hosted temporarily in Supabase Storage bucket `shorts` (public),
+  deleted after publish.
+- **Secrets**: IG_USER_ID + IG_ACCESS_TOKEN (GitHub Actions) alongside
+  SUPABASE_URL + SUPABASE_SERVICE_KEY.
+- **Token expiry**: 60 days. Run `python refresh_ig_token.py` locally about
+  monthly (any time after 24 h old) → resets to fresh 60 days → update the
+  IG_ACCESS_TOKEN secret. Current token lives in credentials/ig_token.txt
+  (gitignored).
+- Webhooks NOT configured — publish-only pipeline doesn't need them.
+
+## 5. Instagram Reels Plan — original notes (superseded by 4.6)
 
 ### Why wait
 Instagram Reels require a Creator/Business account connected to a Facebook Page.

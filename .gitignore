@@ -1,7 +1,6 @@
 # Credentials — NEVER commit these
-credentials/token.pickle
-credentials/client_secret.json
-credentials/token_b64.txt
+credentials/
+*secrets_to_add.txt
 
 # Temp output
 output/
