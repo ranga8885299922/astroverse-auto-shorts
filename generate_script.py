@@ -73,14 +73,30 @@ def _build_grounding_block(g: dict | None) -> str:
     return "\n".join(lines)
 
 
-def _call_groq(client, sign, languages, theme, tone, grounding=None) -> list[dict]:
+def _build_hooks_block(top_hooks: list[str] | None) -> str:
+    """Feedback loop: steer the hook style toward recent top performers."""
+    if not top_hooks:
+        return ""
+    lines = [
+        "",
+        "PROVEN HOOKS — these recent hooks got the MOST VIEWS. Write "
+        "highlight_telugu with similar style and energy (do NOT copy them, "
+        "today's prediction must be fresh):",
+    ]
+    for i, h in enumerate(top_hooks, 1):
+        lines.append(f"{i}. {h}")
+    return "\n".join(lines)
+
+
+def _call_groq(client, sign, languages, theme, tone, grounding=None,
+               top_hooks=None) -> list[dict]:
     today, date_short = _get_ist_dates()
     lang        = languages[0]
     rasi_telugu = RASI_TELUGU.get(sign, sign)
     symbol      = SIGN_SYMBOLS.get(sign, "🔮")
 
     prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}. Theme of the day: {theme}. Tone: {tone}.
-{_build_grounding_block(grounding)}
+{_build_grounding_block(grounding)}{_build_hooks_block(top_hooks)}
 
 Return ONLY this JSON object. Start with {{ end with }}. No text outside:
 {{
@@ -160,6 +176,10 @@ Vary the specifics daily so each day feels fresh and personally written by a rea
             obj["title_yt"] = build_title(
                 obj["highlight_telugu"], obj["rasi_telugu"], date_short
             )
+
+            # Metadata for the performance feedback loop
+            obj["planet"] = grounding["planet"] if grounding else None
+            obj["theme"]  = theme
             return [obj]
 
         except json.JSONDecodeError as e:
@@ -181,7 +201,8 @@ Vary the specifics daily so each day feels fresh and personally written by a rea
     raise RuntimeError(f"Failed after 3 attempts for {sign}. Last: {last_error}")
 
 
-def generate_scripts(config: dict, grounding: dict | None = None) -> list[dict]:
+def generate_scripts(config: dict, grounding: dict | None = None,
+                     top_hooks: list[str] | None = None) -> list[dict]:
     client       = Groq(api_key=os.environ["GROQ_API_KEY"])
     signs        = config["signs"]
     languages    = config["languages"]
@@ -191,7 +212,8 @@ def generate_scripts(config: dict, grounding: dict | None = None) -> list[dict]:
     for i, sign in enumerate(signs, 1):
         print(f"  → Sign {i}/{len(signs)}: {sign}...")
         sign_grounding = grounding.get(sign) if grounding else None
-        results = _call_groq(client, sign, languages, theme, tone, sign_grounding)
+        results = _call_groq(client, sign, languages, theme, tone,
+                             sign_grounding, top_hooks)
         all_scripts.extend(results)
         if i < len(signs):
             time.sleep(4)

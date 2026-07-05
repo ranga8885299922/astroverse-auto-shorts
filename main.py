@@ -85,12 +85,23 @@ def main():
     clear_dir(OUT_DIR)
     clear_dir(INSTA_DIR)
 
+    # ── Step 0: Refresh performance metrics (feedback loop) ───────────────────
+    print("\n[0/4] Collecting Instagram insights from previous runs...")
+    from collect_insights import collect, fetch_top_hooks
+    try:
+        collect()
+    except Exception as e:
+        print(f"      ⚠ insights collection failed (non-fatal): {e}")
+    top_hooks = fetch_top_hooks()
+    if top_hooks:
+        print(f"      ✓ {len(top_hooks)} top-performing hook(s) will steer today's scripts")
+
     # ── Step 1: Generate scripts (grounded in Parashara/BPHS rules DB) ────────
     print("\n[1/4] Fetching BPHS grounding from Supabase...")
     grounding = fetch_bphs_grounding(config["signs"])   # None → plain LLM mode
 
     print("\n[1/4] Generating scripts via Groq...")
-    items = generate_scripts(config, grounding)
+    items = generate_scripts(config, grounding, top_hooks)
     total = len(items)
     print(f"      ✓ {total} scripts ready\n")
 

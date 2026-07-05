@@ -146,7 +146,13 @@ def post_to_instagram(item: dict, video_path: str) -> str | None:
             timeout=60,
         )
         r.raise_for_status()
-        return r.json().get("id")
+        media_id = r.json().get("id")
+
+        # Log to Supabase for the performance feedback loop (non-fatal)
+        if media_id:
+            from collect_insights import log_published
+            log_published(media_id, item)
+        return media_id
 
     finally:
         _storage_delete(object_name)
