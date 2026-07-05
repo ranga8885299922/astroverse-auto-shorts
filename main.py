@@ -92,6 +92,13 @@ def main():
         collect()
     except Exception as e:
         print(f"      ⚠ insights collection failed (non-fatal): {e}")
+
+    # Auto-reply to new comments on recent Reels (CTA to astroloz.com)
+    from reply_comments import reply_to_new_comments
+    try:
+        reply_to_new_comments()
+    except Exception as e:
+        print(f"      ⚠ comment auto-reply failed (non-fatal): {e}")
     top_hooks = fetch_top_hooks()
     if top_hooks:
         print(f"      ✓ {len(top_hooks)} top-performing hook(s) will steer today's scripts")
