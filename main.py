@@ -114,21 +114,27 @@ def main():
 
     success_count = 0
     fail_count    = 0
+    ig_posted     = 0
 
-    # ── Step 2-4: Process each item ───────────────────────────────────────────
+    ig_on = instagram_enabled()
+    if not ig_on:
+        print("      (IG auto-publish off — IG_USER_ID/IG_ACCESS_TOKEN/SUPABASE_* not set)")
+
+    # ── Step 2-4: Process each item — INSTAGRAM FIRST (primary target) ────────
     for i, item in enumerate(items, 1):
         sign = item["sign"]
         lang = item["language"]
         print(f"[{i:02d}/{total}]  {sign:14s} | {lang}")
 
         entry = {
-            "date":      datetime.date.today().isoformat(),
-            "run_id":    os.environ.get("GITHUB_RUN_ID", "local"),
-            "sign":      sign,
-            "language":  lang,
-            "status":    "",
-            "video_id":  "",
-            "error":     "",
+            "date":        datetime.date.today().isoformat(),
+            "run_id":      os.environ.get("GITHUB_RUN_ID", "local"),
+            "sign":        sign,
+            "language":    lang,
+            "status":      "",
+            "video_id":    "",
+            "ig_media_id": "",
+            "error":       "",
         }
 
         audio_path = None
@@ -143,7 +149,25 @@ def main():
             print(f"        → MoviePy render...")
             video_path = build_video(item, audio_path, config, OUT_DIR)
 
-            # 4. Upload
+            # 4a. INSTAGRAM first — optimise + publish (with retry inside)
+            insta_path = None
+            try:
+                insta_path = optimize_for_instagram(video_path, INSTA_DIR)
+            except Exception as e:
+                print(f"        ⚠ IG optimise failed (non-fatal): {e}")
+            if ig_on and insta_path:
+                try:
+                    print(f"        → Instagram Reel...")
+                    media_id = post_to_instagram(item, insta_path)
+                    if media_id:
+                        ig_posted += 1
+                        entry["ig_media_id"] = media_id
+                        print(f"        ✓ Reel published (media {media_id})")
+                except Exception as e:
+                    entry["error"] += f"IG: {e}; "
+                    print(f"        ⚠ Reel publish failed after retries: {e}")
+
+            # 4b. YouTube second
             print(f"        → YouTube upload...")
             vid_id = upload_video(item, video_path, config)
 
@@ -154,14 +178,13 @@ def main():
 
         except Exception as e:
             entry["status"] = "FAILED"
-            entry["error"]  = str(e)
+            entry["error"] += str(e)
             fail_count += 1
             print(f"        ✗ FAILED: {e}")
             traceback.print_exc()
 
         finally:
-            # Delete only the audio temp file. KEEP the video — it is needed
-            # for the Instagram optimisation / offline-download step below.
+            # Delete only the audio temp file. Videos stay for the artifact.
             if audio_path and pathlib.Path(audio_path).exists():
                 try:
                     os.remove(audio_path)
@@ -170,39 +193,7 @@ def main():
 
         log_entry(entry)
 
-    # ── Step 5: Optimise for Instagram + auto-publish Reels ───────────────────
-    print("\n[+] Optimising videos for Instagram → instagram/ ...")
-    slug_to_item = {
-        f'{it["sign"]}_{it["language"]}'.replace(" ", "_").lower(): it
-        for it in items
-    }
-    ig_on = instagram_enabled()
-    if not ig_on:
-        print("      (IG auto-publish off — IG_USER_ID/IG_ACCESS_TOKEN/SUPABASE_* not set)")
-
-    insta_count = 0
-    ig_posted   = 0
-    for mp4 in sorted(pathlib.Path(OUT_DIR).glob("*.mp4")):
-        try:
-            out = optimize_for_instagram(str(mp4), INSTA_DIR)
-            insta_count += 1
-            print(f"      ✓ {pathlib.Path(out).name}")
-        except Exception as e:
-            print(f"      ⚠ Instagram optimise failed for {mp4.name}: {e}")
-            continue
-
-        if ig_on:
-            item = slug_to_item.get(mp4.stem)
-            if item:
-                try:
-                    media_id = post_to_instagram(item, out)
-                    if media_id:
-                        ig_posted += 1
-                        print(f"        ✓ Reel published (media {media_id})")
-                except Exception as e:
-                    print(f"        ⚠ Reel publish failed (non-fatal): {e}")
-
-    print(f"      {insta_count} video(s) ready in '{INSTA_DIR}/' for download"
+    print(f"\n      videos in '{INSTA_DIR}/' for download"
           + (f", {ig_posted} Reel(s) auto-published" if ig_on else ""))
 
     # ── Summary ───────────────────────────────────────────────────────────────

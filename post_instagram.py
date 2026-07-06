@@ -38,7 +38,7 @@ import requests
 
 IG_API = "https://graph.instagram.com/v21.0"
 
-# ── Caption (edit here) ───────────────────────────────────────────────────────
+# ── Caption + first comment (edit here) ───────────────────────────────────────
 IG_UTM = "utm_source=instagram&utm_medium=reels&utm_campaign=daily"
 IG_CAPTION_TEMPLATE = (
     "{hook}\n\n"
@@ -47,7 +47,15 @@ IG_CAPTION_TEMPLATE = (
     "#TeluguHoroscope #రాశిఫలాలు #DailyHoroscope #Astrology #{sign} "
     "#TeluguReels #Jyotishyam #astroloz"
 )
+# Posted as the Reel's first comment right after publish (like YouTube)
+IG_FIRST_COMMENT = (
+    "🌟 మీ రాశి పూర్తి జాతకం, lucky time, remedies అన్నీ ఉచితంగా 👉 "
+    "https://astroloz.com/?utm_source=instagram&utm_medium=reels&utm_campaign=comment"
+)
 # ──────────────────────────────────────────────────────────────────────────────
+
+PUBLISH_RETRIES = 1    # one automatic retry when a publish attempt fails
+RETRY_WAIT      = 30   # seconds between attempts
 
 STORAGE_BUCKET   = "shorts"
 POLL_INTERVAL    = 10          # seconds between container status checks
@@ -94,12 +102,27 @@ def _storage_delete(object_name: str) -> None:
 
 def post_to_instagram(item: dict, video_path: str) -> str | None:
     """
-    Publish one video as a Reel. Returns the IG media id, or None on skip.
-    Raises on hard API errors (caller decides whether that's fatal).
+    Publish one video as a Reel with automatic retry (transient container
+    timeouts were causing occasional missing Reels). Returns the IG media id,
+    or None on skip. Raises after all attempts fail.
     """
     if not instagram_enabled():
         return None
 
+    last_err = None
+    for attempt in range(PUBLISH_RETRIES + 1):
+        try:
+            return _publish_once(item, video_path)
+        except Exception as e:
+            last_err = e
+            if attempt < PUBLISH_RETRIES:
+                print(f"        ⚠ publish attempt {attempt+1} failed ({e}), "
+                      f"retrying in {RETRY_WAIT}s...")
+                time.sleep(RETRY_WAIT)
+    raise last_err
+
+
+def _publish_once(item: dict, video_path: str) -> str | None:
     token = os.environ["IG_ACCESS_TOKEN"]
 
     caption = IG_CAPTION_TEMPLATE.format(
@@ -148,8 +171,18 @@ def post_to_instagram(item: dict, video_path: str) -> str | None:
         r.raise_for_status()
         media_id = r.json().get("id")
 
-        # Log to Supabase for the performance feedback loop (non-fatal)
         if media_id:
+            # First comment with the astroloz.com link (like YouTube; non-fatal)
+            try:
+                requests.post(
+                    f"{IG_API}/{media_id}/comments",
+                    params={"message": IG_FIRST_COMMENT, "access_token": token},
+                    timeout=30,
+                )
+            except Exception as e:
+                print(f"        ⚠ first comment failed (non-fatal): {e}")
+
+            # Log to Supabase for the performance feedback loop (non-fatal)
             from collect_insights import log_published
             log_published(media_id, item)
         return media_id
