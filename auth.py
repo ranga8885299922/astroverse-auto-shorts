@@ -57,6 +57,39 @@ def main() -> None:
     print(f"\nOK  Token saved to '{TOKEN}'")
     print(f"    Scopes granted : {creds.scopes}")
     print(f"    Token expiry   : {creds.expiry}")
+
+    # Sync the refresh token to Supabase app_secrets so the reply-comments
+    # Edge Function (10-min YouTube auto-replies) keeps working after re-auth.
+    try:
+        import os, json, requests
+        url = os.environ.get("SUPABASE_URL", "")
+        key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+        if not (url and key):
+            env_file = pathlib.Path(r"C:\Astroverse\Astroloz_webapp\astroloz-pwa\backend\.env")
+            if env_file.exists():
+                for line in env_file.read_text().splitlines():
+                    if line.startswith("SUPABASE_URL="):
+                        url = line.split("=", 1)[1].strip()
+                    elif line.startswith("SUPABASE_SERVICE_KEY="):
+                        key = line.split("=", 1)[1].strip()
+        if url and key and creds.refresh_token:
+            conf = json.loads(pathlib.Path(SECRETS).read_text())
+            conf = conf.get("installed") or conf.get("web")
+            for k, v in [("yt_client_id", conf["client_id"]),
+                         ("yt_client_secret", conf["client_secret"]),
+                         ("yt_refresh_token", creds.refresh_token)]:
+                requests.post(
+                    f"{url.rstrip('/')}/rest/v1/app_secrets",
+                    headers={"apikey": key, "Authorization": f"Bearer {key}",
+                             "Content-Type": "application/json",
+                             "Prefer": "resolution=merge-duplicates"},
+                    params={"on_conflict": "key"},
+                    json={"key": k, "value": v}, timeout=30)
+            print("OK  Supabase app_secrets synced (10-min YT replies keep working)")
+        else:
+            print("!!  Supabase not synced - update app_secrets yt_refresh_token manually")
+    except Exception as e:
+        print(f"!!  Supabase sync failed ({e}) - update app_secrets manually")
     print()
     print("Next step — encode for GitHub Actions secret:")
     print(
