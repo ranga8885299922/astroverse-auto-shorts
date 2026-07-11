@@ -23,9 +23,9 @@ except ImportError:
 # 3 stacked clips: Telugu | Latin (gold) | Telugu
 # NotoSansTelugu has no Latin glyphs, so Latin words use FONT_BOLD/Arial.
 # Telugu words use NotoSansTelugu-Bold. Never mix both in one TextClip.
-CTA_SCREEN_TEL1    = "మీ personal జాతకం"               # Telugu words  (NotoSansTelugu-Bold)
-CTA_SCREEN_LATIN   = "astroloz.com - completely free"   # Latin words   (FONT_BOLD/Arial, gold)
-CTA_SCREEN_TEL2    = "లింక్ కింద కామెంట్‌లో ఉంది"      # Telugu line 2 (NotoSansTelugu-Bold)
+CTA_SCREEN_TEL1    = "మీ వ్యక్తిగత ప్రశ్నలకు ఉచిత సమాధానాలు"   # Telugu (NotoSansTelugu-Bold)
+CTA_SCREEN_LATIN   = 'Comment "link"'                          # Latin action (FONT_BOLD, gold)
+CTA_SCREEN_TEL2    = "లింక్ రిప్లై ఇస్తాను"                    # Telugu (NotoSansTelugu-Bold)
 CTA_START          = 10          # seconds — overlay appears
 CTA_END            = 16          # seconds — overlay disappears
 CTA_BOX_Y          = 1380        # absolute Y pixel — top of background box

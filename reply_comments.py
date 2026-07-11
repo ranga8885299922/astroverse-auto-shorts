@@ -21,8 +21,19 @@ import requests
 
 IG_API = "https://graph.instagram.com/v21.0"
 
-# ── Reply text (edit here) ────────────────────────────────────────────────────
-REPLY_TEXT = "మీ personal జాతకం astroloz.com లో free గా check చేసుకోండి 🔮"
+# ── Reply texts (edit here) ───────────────────────────────────────────────────
+# The CTA promises "comment 'link' and I'll reply with the website link" —
+# so the reply must contain the actual URL.
+REPLY_TEXT = (
+    "🌟 ఇదిగో మీ link 👉 "
+    "https://astroloz.com/?utm_source=instagram&utm_medium=reels&utm_campaign=reply"
+    " — మీ విద్య, ఉద్యోగం, వ్యాపారం, వివాహం ప్రశ్నలకు పూర్తి ఉచిత సమాధానాలు!"
+)
+YT_REPLY_TEXT = (
+    "🌟 ఇదిగో మీ link 👉 "
+    "https://astroloz.com/?utm_source=youtube&utm_medium=shorts&utm_campaign=reply"
+    "\nమీ విద్య, ఉద్యోగం, వ్యాపారం, వివాహం ప్రశ్నలకు పూర్తి ఉచిత సమాధానాలు!"
+)
 # ──────────────────────────────────────────────────────────────────────────────
 
 OWN_USERNAME       = "astroloz_com"   # never reply to our own comments
@@ -130,4 +141,88 @@ def reply_to_new_comments() -> int:
                 continue
 
     print(f"      ✓ auto-replied to {sent} new comment(s)")
+    return sent
+
+
+def reply_to_new_youtube_comments() -> int:
+    """
+    Reply to unanswered comments on recent YouTube Shorts with the website
+    link. Same dedupe table as Instagram (comment id formats never collide).
+    Runs in the nightly pipeline (needs the OAuth token.pickle credentials).
+    """
+    _, url, key = _env()
+    if not (url and key):
+        print("      (YT comment auto-reply skipped — Supabase env not set)")
+        return 0
+
+    replied = _already_replied(url, key)
+    if replied is None:
+        print("      ⚠ YT comment auto-reply skipped — dedupe table unreachable")
+        return 0
+
+    try:
+        from upload_youtube import get_youtube_client
+        yt = get_youtube_client()
+        ch = yt.channels().list(part="id,contentDetails", mine=True).execute()
+        channel_id = ch["items"][0]["id"]
+        uploads    = ch["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+    except Exception as e:
+        print(f"      ⚠ YT comment scan failed (non-fatal): {e}")
+        return 0
+
+    now            = datetime.datetime.utcnow()
+    video_cutoff   = (now - datetime.timedelta(days=MEDIA_LOOKBACK)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    comment_cutoff = (now - datetime.timedelta(days=COMMENT_LOOKBACK)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    try:
+        pl = yt.playlistItems().list(part="contentDetails",
+                                     playlistId=uploads, maxResults=50).execute()
+        video_ids = [it["contentDetails"]["videoId"] for it in pl.get("items", [])
+                     if it["contentDetails"].get("videoPublishedAt", "") >= video_cutoff]
+    except Exception as e:
+        print(f"      ⚠ YT uploads list failed (non-fatal): {e}")
+        return 0
+
+    sent = 0
+    for vid in video_ids:
+        try:
+            threads = yt.commentThreads().list(
+                part="snippet", videoId=vid, maxResults=50,
+                order="time", textFormat="plainText",
+            ).execute()
+        except Exception:
+            continue  # comments disabled or not yet available
+
+        for t in threads.get("items", []):
+            if sent >= MAX_REPLIES_PER_RUN:
+                break
+            top = t["snippet"]["topLevelComment"]
+            cid = top["id"]
+            sn  = top["snippet"]
+            author = (sn.get("authorChannelId") or {}).get("value", "")
+            if (cid in replied
+                    or author == channel_id
+                    or sn.get("publishedAt", "") < comment_cutoff):
+                continue
+            try:
+                yt.comments().insert(
+                    part="snippet",
+                    body={"snippet": {"parentId": cid,
+                                      "textOriginal": YT_REPLY_TEXT}},
+                ).execute()
+                requests.post(
+                    f"{url}/rest/v1/replied_comments",
+                    headers={**_sb_headers(key),
+                             "Prefer": "resolution=merge-duplicates"},
+                    params={"on_conflict": "comment_id"},
+                    json={"comment_id": cid, "media_id": vid,
+                          "username": sn.get("authorDisplayName"),
+                          "comment_text": (sn.get("textDisplay") or "")[:500]},
+                    timeout=30,
+                )
+                sent += 1
+            except Exception:
+                continue
+
+    print(f"      ✓ auto-replied to {sent} new YouTube comment(s)")
     return sent

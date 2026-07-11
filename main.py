@@ -93,12 +93,18 @@ def main():
     except Exception as e:
         print(f"      ⚠ insights collection failed (non-fatal): {e}")
 
-    # Auto-reply to new comments on recent Reels (CTA to astroloz.com)
-    from reply_comments import reply_to_new_comments
+    # Auto-reply to new comments (Instagram backstop + YouTube Shorts).
+    # Instagram's primary replies run every 10 min via the Supabase Edge
+    # Function; YouTube replies happen here nightly (needs OAuth creds).
+    from reply_comments import reply_to_new_comments, reply_to_new_youtube_comments
     try:
         reply_to_new_comments()
     except Exception as e:
-        print(f"      ⚠ comment auto-reply failed (non-fatal): {e}")
+        print(f"      ⚠ IG comment auto-reply failed (non-fatal): {e}")
+    try:
+        reply_to_new_youtube_comments()
+    except Exception as e:
+        print(f"      ⚠ YT comment auto-reply failed (non-fatal): {e}")
 
     # Optional content steering — both OFF by default (pure AI content,
     # like the early well-performing version). Flip flags in config.json.

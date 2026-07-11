@@ -6,11 +6,13 @@ from zoneinfo import ZoneInfo
 from groq import Groq
 
 # ── Conversion CTA — spoken (gTTS audio) ─────────────────────────────────────
-# Inserted at the first sentence boundary so it never cuts mid-sentence.
-# "dot com" so gTTS pronounces it clearly; link is in the pinned comment.
+# Inserted at a sentence boundary so it never cuts mid-sentence.
+# Engagement CTA: viewers comment "link" → auto-reply delivers the website
+# link (drives comment count, which the algorithm rewards).
 CTA_SPOKEN = (
-    "మీ personal జాతకం astroloz dot com లో completely free."
-    " లింక్ కింద కామెంట్‌లో ఉంది."
+    "మీ విద్య, ఉద్యోగం, వ్యాపారం, వివాహం వంటి వ్యక్తిగత ప్రశ్నలకు పూర్తి "
+    "ఉచిత సమాధానాల కోసం link అని comment చేయండి."
+    " నేను website link reply ఇస్తాను."
 )
 
 # ── YouTube title — hook line as title (edit here) ───────────────────────────
