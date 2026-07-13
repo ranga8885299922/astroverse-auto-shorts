@@ -41,6 +41,19 @@ MEDIA_LOOKBACK     = 14               # days of media to scan
 COMMENT_LOOKBACK   = 7                # only reply to comments this fresh
 MAX_REPLIES_PER_RUN = 40              # safety valve against rate limits
 
+# The IG API returns username=null for our own nested replies, so username
+# checks alone caused a self-reply loop. Any comment containing one of these
+# signatures is ours (or quotes ours) — never reply to it.
+SELF_SIGNATURES = ("ఇదిగో మీ link", "utm_campaign=reply",
+                   "utm_campaign=comment", "astroloz.com")
+
+
+def _is_self(text: str | None, username: str | None = None) -> bool:
+    if username == OWN_USERNAME:
+        return True
+    t = text or ""
+    return any(s in t for s in SELF_SIGNATURES)
+
 
 def _env():
     return (
@@ -115,7 +128,7 @@ def reply_to_new_comments() -> int:
             if sent >= MAX_REPLIES_PER_RUN:
                 break
             if (c["id"] in replied
-                    or c.get("username") == OWN_USERNAME
+                    or _is_self(c.get("text"), c.get("username"))
                     or c.get("timestamp", "") < comment_since):
                 continue
             try:
@@ -125,17 +138,25 @@ def reply_to_new_comments() -> int:
                     timeout=30,
                 )
                 r.raise_for_status()
-                # Record BEFORE moving on so a crash can't cause double replies
-                requests.post(
-                    f"{url}/rest/v1/replied_comments",
-                    headers={**_sb_headers(key),
-                             "Prefer": "resolution=merge-duplicates"},
-                    params={"on_conflict": "comment_id"},
-                    json={"comment_id": c["id"], "media_id": m["id"],
-                          "username": c.get("username"),
-                          "comment_text": (c.get("text") or "")[:500]},
-                    timeout=30,
-                )
+
+                def _record(cid, uname, text):
+                    requests.post(
+                        f"{url}/rest/v1/replied_comments",
+                        headers={**_sb_headers(key),
+                                 "Prefer": "resolution=merge-duplicates"},
+                        params={"on_conflict": "comment_id"},
+                        json={"comment_id": cid, "media_id": m["id"],
+                              "username": uname,
+                              "comment_text": (text or "")[:500]},
+                        timeout=30,
+                    )
+
+                # record the comment we answered AND our own new reply's id,
+                # so neither can ever be answered again
+                _record(c["id"], c.get("username"), c.get("text"))
+                our_id = (r.json() or {}).get("id")
+                if our_id:
+                    _record(our_id, OWN_USERNAME, "[our reply]")
                 sent += 1
             except Exception:
                 continue
@@ -202,24 +223,31 @@ def reply_to_new_youtube_comments() -> int:
             author = (sn.get("authorChannelId") or {}).get("value", "")
             if (cid in replied
                     or author == channel_id
+                    or _is_self(sn.get("textDisplay"))
                     or sn.get("publishedAt", "") < comment_cutoff):
                 continue
             try:
-                yt.comments().insert(
+                created = yt.comments().insert(
                     part="snippet",
                     body={"snippet": {"parentId": cid,
                                       "textOriginal": YT_REPLY_TEXT}},
                 ).execute()
-                requests.post(
-                    f"{url}/rest/v1/replied_comments",
-                    headers={**_sb_headers(key),
-                             "Prefer": "resolution=merge-duplicates"},
-                    params={"on_conflict": "comment_id"},
-                    json={"comment_id": cid, "media_id": vid,
-                          "username": sn.get("authorDisplayName"),
-                          "comment_text": (sn.get("textDisplay") or "")[:500]},
-                    timeout=30,
-                )
+
+                def _record(rec_id, uname, text):
+                    requests.post(
+                        f"{url}/rest/v1/replied_comments",
+                        headers={**_sb_headers(key),
+                                 "Prefer": "resolution=merge-duplicates"},
+                        params={"on_conflict": "comment_id"},
+                        json={"comment_id": rec_id, "media_id": vid,
+                              "username": uname,
+                              "comment_text": (text or "")[:500]},
+                        timeout=30,
+                    )
+
+                _record(cid, sn.get("authorDisplayName"), sn.get("textDisplay"))
+                if created.get("id"):
+                    _record(created["id"], "astroloz (own)", "[our reply]")
                 sent += 1
             except Exception:
                 continue
