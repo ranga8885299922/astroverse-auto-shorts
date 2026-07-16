@@ -47,10 +47,10 @@ IG_CAPTION_TEMPLATE = (
     "#TeluguHoroscope #రాశిఫలాలు #DailyHoroscope #Astrology #{sign} "
     "#TeluguReels #Jyotishyam #astroloz"
 )
-# Posted as the Reel's first comment right after publish (like YouTube)
+# Posted as the Reel's first comment right after publish (like YouTube).
+# Plain domain only — long URLs get auto-hidden as spam in comments.
 IG_FIRST_COMMENT = (
-    "🌟 మీ రాశి పూర్తి జాతకం, lucky time, remedies అన్నీ ఉచితంగా 👉 "
-    "https://astroloz.com/?utm_source=instagram&utm_medium=reels&utm_campaign=comment"
+    "🌟 మీ రాశి పూర్తి జాతకం, lucky time, remedies అన్నీ ఉచితంగా 👉 astroloz.com"
 )
 # ──────────────────────────────────────────────────────────────────────────────
 

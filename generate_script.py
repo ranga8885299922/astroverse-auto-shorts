@@ -15,21 +15,20 @@ CTA_SPOKEN = (
     " నేను website link reply ఇస్తాను."
 )
 
-# ── YouTube title — hook line as title (edit here) ───────────────────────────
-# The dramatic highlight_telugu (same text as the 0-5s thumbnail card) becomes
-# the title, so thumbnail and title reinforce each other. The suffix keeps the
-# "రాశి ఫలాలు" search keyword. Total capped at 100 chars (YouTube hard limit);
-# the highlight is truncated first, never the rasi/date suffix.
-TITLE_SUFFIX_TEMPLATE = " | {rasi} ఫలాలు {date}"
+# ── YouTube title — "{rasi}: {hook} | {date}" (edit here) ────────────────────
+# Rasi name FIRST so viewers instantly see whose prediction it is, then this
+# video's own hook. rasi_telugu already contains "రాశి" so the search keyword
+# is naturally present. Capped at 100 chars; the hook is truncated first.
 
 
 def build_title(highlight: str, rasi: str, date_short: str) -> str:
-    suffix = TITLE_SUFFIX_TEMPLATE.format(rasi=rasi, date=date_short)
+    prefix = f"{rasi}: "
+    suffix = f" | {date_short}"
     hl     = " ".join(highlight.split())          # collapse newlines/spaces
-    max_hl = 100 - len(suffix)
+    max_hl = 100 - len(prefix) - len(suffix)
     if len(hl) > max_hl:
         hl = hl[:max_hl - 1].rstrip() + "…"
-    return hl + suffix
+    return prefix + hl + suffix
 
 RASI_TELUGU = {
     "Aries":"మేష రాశి","Taurus":"వృషభ రాశి","Gemini":"మిథున రాశి",
@@ -37,6 +36,32 @@ RASI_TELUGU = {
     "Libra":"తుల రాశి","Scorpio":"వృశ్చిక రాశి","Sagittarius":"ధనుస్సు రాశి",
     "Capricorn":"మకర రాశి","Aquarius":"కుంభ రాశి","Pisces":"మీన రాశి",
 }
+
+# Rasi lord + element — forces astrologically DIFFERENT reasoning per sign,
+# so 4 family members with 4 rasis never hear the same prediction.
+RASI_LORD = {
+    "Aries": "కుజుడు (Mars)",      "Taurus": "శుక్రుడు (Venus)",
+    "Gemini": "బుధుడు (Mercury)",   "Cancer": "చంద్రుడు (Moon)",
+    "Leo": "సూర్యుడు (Sun)",        "Virgo": "బుధుడు (Mercury)",
+    "Libra": "శుక్రుడు (Venus)",    "Scorpio": "కుజుడు (Mars)",
+    "Sagittarius": "గురువు (Jupiter)", "Capricorn": "శని (Saturn)",
+    "Aquarius": "శని (Saturn)",     "Pisces": "గురువు (Jupiter)",
+}
+RASI_ELEMENT = {
+    "Aries": "అగ్ని", "Leo": "అగ్ని", "Sagittarius": "అగ్ని",
+    "Taurus": "భూమి", "Virgo": "భూమి", "Capricorn": "భూమి",
+    "Gemini": "వాయు", "Libra": "వాయు", "Aquarius": "వాయు",
+    "Cancer": "జలం", "Scorpio": "జలం", "Pisces": "జలం",
+}
+
+# Daily rotating focus — on any given day all 12 signs get DIFFERENT focus
+# areas, and each sign's focus changes every day. Kills same-hook syndrome.
+FOCUS_ROTATION = [
+    "కెరీర్ లో పెద్ద మార్పు", "అనుకోని ధన లాభం", "ప్రేమ & వివాహ విషయాలు",
+    "ఆరోగ్యంలో మలుపు", "కుటుంబ శుభవార్త", "విద్య & పోటీ పరీక్షలు",
+    "వ్యాపార అవకాశం", "ప్రయాణ యోగం", "ఆస్తి & వాహన విషయాలు",
+    "ఆధ్యాత్మిక పురోగతి", "పాత మిత్రుల కలయిక", "కొత్త ప్రారంభాలు",
+]
 
 SIGN_SYMBOLS = {
     "Aries":"♈","Taurus":"♉","Gemini":"♊","Cancer":"♋",
@@ -97,7 +122,21 @@ def _call_groq(client, sign, languages, theme, tone, grounding=None,
     rasi_telugu = RASI_TELUGU.get(sign, sign)
     symbol      = SIGN_SYMBOLS.get(sign, "🔮")
 
+    # Per-sign daily ingredients — guarantee 12 DISTINCT videos per day
+    lord    = RASI_LORD.get(sign, "")
+    element = RASI_ELEMENT.get(sign, "")
+    signs_order = list(RASI_TELUGU.keys())
+    sign_idx    = signs_order.index(sign) if sign in signs_order else 0
+    day_of_year = datetime.datetime.now(ZoneInfo("Asia/Kolkata")).timetuple().tm_yday
+    focus       = FOCUS_ROTATION[(day_of_year + sign_idx) % len(FOCUS_ROTATION)]
+
     prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}. Theme of the day: {theme}. Tone: {tone}.
+
+THIS RASI'S UNIQUE CONTEXT (must drive the whole reading):
+- Rasi lord: {lord} — base the planetary reasoning on this lord's current influence.
+- Element: {element}
+- TODAY'S MAIN FOCUS for {rasi_telugu}: {focus} — the hook AND the strongest prediction must center on this focus.
+CRITICAL: 12 rasis get videos on the same day. Families with members of different rasis watch them together — if predictions feel identical it destroys trust. Make this reading CLEARLY specific to {rasi_telugu}: different events, different areas of life, different remedies than any other rasi would get.
 {_build_grounding_block(grounding)}{_build_hooks_block(top_hooks)}
 
 Return ONLY this JSON object. Start with {{ end with }}. No text outside:
@@ -106,8 +145,8 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
   "rasi_telugu": "{rasi_telugu}",
   "language": "{lang['name']}",
   "language_code": "{lang['code']}",
-  "highlight_telugu": "ONE dramatic, exciting prediction in pure Telugu script — this is the VIDEO THUMBNAIL AND TITLE, it must stop the scroll. MUST be a COMPLETE sentence of 5 to 8 words (never fewer than 5). Present tense. NO hedging words like 'maybe/might/possibly'. Make viewers desperate to know more.",
-  "script_telugu": "250 word horoscope in pure Telugu script. FIRST SENTENCE = a shocking curiosity hook about today's single biggest event for this rasi (viewers decide to stay in 3 seconds) — NEVER start with a greeting like నమస్కారం or 'ఈరోజు మీకు'. Then cover in order: active planet position, career, money, love/family, health, 1 risk warning, 1 remedy, lucky color + lucky number, one-line closing blessing.",
+  "highlight_telugu": "The single most distinctive prediction FROM script_telugu, rewritten as a dramatic hook — this is THIS video's THUMBNAIL AND TITLE. It must be about today's main focus ({focus}) and could not apply to any other rasi's video today. COMPLETE sentence of 5 to 8 words. Present tense. NO hedging words like 'maybe/might/possibly'.",
+  "script_telugu": "250 word horoscope in pure Telugu script. FIRST SENTENCE = a shocking curiosity hook about today's main focus ({focus}) for this rasi (viewers decide to stay in 3 seconds) — NEVER start with a greeting like నమస్కారం or 'ఈరోజు మీకు'. Then cover in order: {lord} position and influence, career, money, love/family, health, 1 risk warning, 1 remedy, lucky color + lucky number, one-line closing blessing.",
   "title_en": "{sign} - {date_short} | Telugu Daily Horoscope"
 }}
 

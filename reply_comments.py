@@ -22,18 +22,11 @@ import requests
 IG_API = "https://graph.instagram.com/v21.0"
 
 # ── Reply texts (edit here) ───────────────────────────────────────────────────
-# The CTA promises "comment 'link' and I'll reply with the website link" —
-# so the reply must contain the actual URL.
-REPLY_TEXT = (
-    "🌟 ఇదిగో మీ link 👉 "
-    "https://astroloz.com/?utm_source=instagram&utm_medium=reels&utm_campaign=reply"
-    " — మీ విద్య, ఉద్యోగం, వ్యాపారం, వివాహం ప్రశ్నలకు పూర్తి ఉచిత సమాధానాలు!"
-)
-YT_REPLY_TEXT = (
-    "🌟 ఇదిగో మీ link 👉 "
-    "https://astroloz.com/?utm_source=youtube&utm_medium=shorts&utm_campaign=reply"
-    "\nమీ విద్య, ఉద్యోగం, వ్యాపారం, వివాహం ప్రశ్నలకు పూర్తి ఉచిత సమాధానాలు!"
-)
+# SHORT plain-domain replies only. Long URLs get auto-hidden as spam by
+# Instagram/YouTube comment filters — manual "astroloz.com" replies converted,
+# UTM-link replies did not (viewers never saw them).
+REPLY_TEXT    = "మీ ఉచిత సమాధానాలు ఇక్కడ 👉 astroloz.com"
+YT_REPLY_TEXT = "మీ ఉచిత సమాధానాలు ఇక్కడ 👉 astroloz.com"
 # ──────────────────────────────────────────────────────────────────────────────
 
 OWN_USERNAME       = "astroloz_com"   # never reply to our own comments

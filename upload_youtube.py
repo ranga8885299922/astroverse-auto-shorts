@@ -13,9 +13,10 @@ DESC_CTA_LINE = (
     "👉 మీ పూర్తి జాతకం ఉచితంగా: "
     f"https://astroloz.com/?utm_source=youtube&utm_medium=shorts&utm_campaign={UTM_CAMPAIGN}"
 )
+# Plain domain — long URLs get comments auto-held as spam. The clickable
+# UTM link lives in the video description instead (that one converts fine).
 COMMENT_TEXT  = (
-    "🌟 మీ రాశి పూర్తి జాతకం, lucky time, remedies అన్నీ ఉచితంగా "
-    "👉 https://astroloz.com/?utm_source=youtube&utm_medium=shorts&utm_campaign=comment"
+    "🌟 మీ రాశి పూర్తి జాతకం, lucky time, remedies అన్నీ ఉచితంగా 👉 astroloz.com"
 )
 # ─────────────────────────────────────────────────────────────────────────────
 
