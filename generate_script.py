@@ -69,12 +69,41 @@ SIGN_SYMBOLS = {
     "Sagittarius":"♐","Capricorn":"♑","Aquarius":"♒","Pisces":"♓"
 }
 
+# Telugu weekday names — Python weekday(): Monday=0 … Sunday=6
+TELUGU_WEEKDAY = {
+    0: "సోమవారం", 1: "మంగళవారం", 2: "బుధవారం", 3: "గురువారం",
+    4: "శుక్రవారం", 5: "శనివారం", 6: "ఆదివారం",
+}
+
+# Words that mean "today" — a weekday name in the same sentence as one of
+# these MUST be the actual day. (Day names elsewhere, e.g. remedies like
+# "శుక్రవారం లక్ష్మీ పూజ", are legitimate and left untouched.)
+_TODAY_WORDS = ("ఈరోజు", "ఈ రోజు", "నేడు")
+
+
+def fix_weekday(text: str, correct_day: str) -> str:
+    """Replace hallucinated weekday names in 'today' sentences."""
+    if not text:
+        return text
+    import re
+    parts = re.split(r"([।.!?\n])", text)
+    out = []
+    for seg in parts:
+        if any(w in seg for w in _TODAY_WORDS):
+            for wd in TELUGU_WEEKDAY.values():
+                if wd != correct_day and wd in seg:
+                    seg = seg.replace(wd, correct_day)
+        out.append(seg)
+    return "".join(out)
+
+
 def _get_ist_dates():
     ist_now    = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
     tomorrow   = ist_now + datetime.timedelta(days=1)
     today_str  = tomorrow.strftime("%B %d, %Y")
     date_short = tomorrow.strftime("%b %d %Y")
-    return today_str, date_short
+    weekday_te = TELUGU_WEEKDAY[tomorrow.weekday()]
+    return today_str, date_short, weekday_te
 
 def _build_grounding_block(g: dict | None) -> str:
     """Format BPHS sutras from Supabase into a prompt section (empty if none)."""
@@ -117,7 +146,7 @@ def _build_hooks_block(top_hooks: list[str] | None) -> str:
 
 def _call_groq(client, sign, languages, theme, tone, grounding=None,
                top_hooks=None) -> list[dict]:
-    today, date_short = _get_ist_dates()
+    today, date_short, weekday_te = _get_ist_dates()
     lang        = languages[0]
     rasi_telugu = RASI_TELUGU.get(sign, sign)
     symbol      = SIGN_SYMBOLS.get(sign, "🔮")
@@ -131,6 +160,8 @@ def _call_groq(client, sign, languages, theme, tone, grounding=None,
     focus       = FOCUS_ROTATION[(day_of_year + sign_idx) % len(FOCUS_ROTATION)]
 
     prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}. Theme of the day: {theme}. Tone: {tone}.
+
+DAY FACT (do not get this wrong): {today} is {weekday_te}. If the script mentions today's weekday, it MUST be {weekday_te}. Day names for remedies on OTHER days are allowed (e.g. శుక్రవారం పూజ) but never claim today is a different day.
 
 THIS RASI'S UNIQUE CONTEXT (must drive the whole reading):
 - Rasi lord: {lord} — base the planetary reasoning on this lord's current influence.
@@ -195,6 +226,11 @@ Vary the specifics daily so each day feels fresh and personally written by a rea
             for key in required:
                 if key not in obj or not obj[key]:
                     raise ValueError(f"Missing key: {key}")
+
+            # Deterministic weekday correction — the LLM sometimes claims the
+            # wrong day; fix any day name in "today" sentences to the real one.
+            obj["script_telugu"]    = fix_weekday(obj["script_telugu"], weekday_te)
+            obj["highlight_telugu"] = fix_weekday(obj["highlight_telugu"], weekday_te)
 
             # Build spoken audio script.
             # Sentence 1 is now the HOOK, so the CTA goes after the SECOND
