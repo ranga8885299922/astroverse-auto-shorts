@@ -25,8 +25,12 @@ IG_API = "https://graph.instagram.com/v21.0"
 # SHORT plain-domain replies only. Long URLs get auto-hidden as spam by
 # Instagram/YouTube comment filters — manual "astroloz.com" replies converted,
 # UTM-link replies did not (viewers never saw them).
-REPLY_TEXT    = "astroloz.com"
-YT_REPLY_TEXT = "astroloz.com"
+REPLY_TEXT = (
+    "మీ విద్య, ఆరోగ్య, వివాహ మరియు ఉద్యోగ సంబంధిత ప్రశ్నలకు ఉచిత "
+    "సమాధానాల కొరకు astroloz.com లో రిజిస్టర్ అయ్యి అడగండి. "
+    "లింక్: www.astroloz.com"
+)
+YT_REPLY_TEXT = REPLY_TEXT
 # ──────────────────────────────────────────────────────────────────────────────
 
 OWN_USERNAME       = "astroloz_com"   # never reply to our own comments
