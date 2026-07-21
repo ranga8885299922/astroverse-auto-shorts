@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- GitHub workflow scheduler (APPLIED to Supabase project wtvgkuuktgrufsozirju)
--- Fires daily_shorts.yml at 18:00 UTC (11:30 PM IST) via workflow_dispatch.
+-- Fires daily_shorts.yml at 17:00 UTC (10:30 PM IST) via workflow_dispatch.
 --
 -- The GitHub PAT lives in Supabase Vault under the name 'github_pat_shorts'.
 -- It is NEVER stored in this file, the repo, or migration history.
@@ -101,7 +101,8 @@ REVOKE EXECUTE ON FUNCTION public.sync_trigger_log()    FROM anon, authenticated
 DO $$ BEGIN PERFORM cron.unschedule('github-daily-shorts-trigger'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
 DO $$ BEGIN PERFORM cron.unschedule('github-daily-shorts-logsync'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
-SELECT cron.schedule('github-daily-shorts-trigger', '0 18 * * *',
+-- 17:00 UTC = 22:30 IST (10:30 PM)
+SELECT cron.schedule('github-daily-shorts-trigger', '0 17 * * *',
                      $$SELECT public.trigger_daily_shorts();$$);
-SELECT cron.schedule('github-daily-shorts-logsync', '5 18 * * *',
+SELECT cron.schedule('github-daily-shorts-logsync', '5 17 * * *',
                      $$SELECT public.sync_trigger_log();$$);
