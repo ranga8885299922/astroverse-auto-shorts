@@ -66,15 +66,29 @@ def _sb_headers(key: str) -> dict:
 
 
 def _already_replied(url: str, key: str) -> set[str]:
+    # Paginate with Range headers — PostgREST caps each response at ~1000 rows
+    # regardless of ?limit=, so a single request silently drops the newest ids
+    # once the table exceeds 1000, causing endless re-replies. Load every page.
+    ids: set[str] = set()
+    page = 1000
     try:
-        r = requests.get(
-            f"{url}/rest/v1/replied_comments",
-            headers=_sb_headers(key),
-            params={"select": "comment_id", "limit": "10000"},
-            timeout=30,
-        )
-        r.raise_for_status()
-        return {row["comment_id"] for row in r.json()}
+        for offset in range(0, 500000, page):
+            r = requests.get(
+                f"{url}/rest/v1/replied_comments",
+                headers={**_sb_headers(key),
+                         "Range-Unit": "items",
+                         "Range": f"{offset}-{offset + page - 1}"},
+                params={"select": "comment_id"},
+                timeout=30,
+            )
+            r.raise_for_status()
+            rows = r.json()
+            if not rows:
+                break
+            ids.update(row["comment_id"] for row in rows)
+            if len(rows) < page:
+                break
+        return ids
     except Exception:
         # If we can't read the dedupe table, replying is unsafe — do nothing.
         return None
@@ -148,12 +162,9 @@ def reply_to_new_comments() -> int:
                         timeout=30,
                     )
 
-                # record the comment we answered AND our own new reply's id,
-                # so neither can ever be answered again
+                # record only the comment we answered (isSelf/_is_self already
+                # skips our own replies, so no need to persist their ids)
                 _record(c["id"], c.get("username"), c.get("text"))
-                our_id = (r.json() or {}).get("id")
-                if our_id:
-                    _record(our_id, OWN_USERNAME, "[our reply]")
                 sent += 1
             except Exception:
                 continue
@@ -243,8 +254,6 @@ def reply_to_new_youtube_comments() -> int:
                     )
 
                 _record(cid, sn.get("authorDisplayName"), sn.get("textDisplay"))
-                if created.get("id"):
-                    _record(created["id"], "astroloz (own)", "[our reply]")
                 sent += 1
             except Exception:
                 continue
