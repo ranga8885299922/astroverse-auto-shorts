@@ -26,6 +26,9 @@ except ImportError:
 CTA_SCREEN_TEL1    = "మీ వ్యక్తిగత ప్రశ్నలకు ఉచిత సమాధానాలు"   # Telugu (NotoSansTelugu-Bold)
 CTA_SCREEN_LATIN   = 'Comment "link"'                          # Latin action (FONT_BOLD, gold)
 CTA_SCREEN_TEL2    = "లింక్ రిప్లై ఇస్తాను"                    # Telugu (NotoSansTelugu-Bold)
+# Hindi equivalents (Devanagari) — used when item["lang"] == "hi"
+CTA_SCREEN_HI1     = "अपने निजी सवालों के मुफ़्त जवाब"
+CTA_SCREEN_HI2     = "लिंक reply करूँगा"
 CTA_START          = 10          # seconds — overlay appears
 CTA_END            = 16          # seconds — overlay disappears
 CTA_BOX_Y          = 1380        # absolute Y pixel — top of background box
@@ -40,11 +43,19 @@ TELUGU_FONT_BOLD_URL = "https://github.com/googlefonts/noto-fonts/raw/main/hinte
 TELUGU_FONT_PATH     = "fonts/NotoSansTelugu-Regular.ttf"
 TELUGU_BOLD_PATH     = "fonts/NotoSansTelugu-Bold.ttf"
 
+# Hindi (Devanagari) — downloaded only when needed; same Noto family.
+DEVANAGARI_FONT_URL      = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf"
+DEVANAGARI_FONT_BOLD_URL = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Bold.ttf"
+DEVANAGARI_FONT_PATH     = "fonts/NotoSansDevanagari-Regular.ttf"
+DEVANAGARI_BOLD_PATH     = "fonts/NotoSansDevanagari-Bold.ttf"
+
 def ensure_fonts():
     import time
     os.makedirs("fonts", exist_ok=True)
     for url, path in [(TELUGU_FONT_URL, TELUGU_FONT_PATH),
-                      (TELUGU_FONT_BOLD_URL, TELUGU_BOLD_PATH)]:
+                      (TELUGU_FONT_BOLD_URL, TELUGU_BOLD_PATH),
+                      (DEVANAGARI_FONT_URL, DEVANAGARI_FONT_PATH),
+                      (DEVANAGARI_FONT_BOLD_URL, DEVANAGARI_BOLD_PATH)]:
         if os.path.exists(path) and os.path.getsize(path) > 10_000:
             continue
         for attempt in range(3):
@@ -155,9 +166,22 @@ def build_video(item, audio_path, config, out_dir):
     rasi           = item.get("rasi_telugu", item["sign"])
     highlight_text = item.get("highlight_telugu", rasi)
 
-    tel_bold = TELUGU_BOLD_PATH if os.path.exists(TELUGU_BOLD_PATH) else \
-               TELUGU_FONT_PATH if os.path.exists(TELUGU_FONT_PATH) else FONT_BOLD
-    tel_reg  = TELUGU_FONT_PATH if os.path.exists(TELUGU_FONT_PATH) else FONT_REGULAR
+    # Language-aware script font: Devanagari for Hindi, else Telugu.
+    is_hindi = item.get("lang") == "hi" or item.get("language", "").lower().startswith("hindi")
+    if is_hindi:
+        disp_bold = DEVANAGARI_BOLD_PATH if os.path.exists(DEVANAGARI_BOLD_PATH) else \
+                    DEVANAGARI_FONT_PATH if os.path.exists(DEVANAGARI_FONT_PATH) else FONT_BOLD
+        disp_reg  = DEVANAGARI_FONT_PATH if os.path.exists(DEVANAGARI_FONT_PATH) else FONT_REGULAR
+        lang_label = "Hindi"
+        cta1, cta2 = CTA_SCREEN_HI1, CTA_SCREEN_HI2
+    else:
+        disp_bold = TELUGU_BOLD_PATH if os.path.exists(TELUGU_BOLD_PATH) else \
+                    TELUGU_FONT_PATH if os.path.exists(TELUGU_FONT_PATH) else FONT_BOLD
+        disp_reg  = TELUGU_FONT_PATH if os.path.exists(TELUGU_FONT_PATH) else FONT_REGULAR
+        lang_label = "Telugu"
+        cta1, cta2 = CTA_SCREEN_TEL1, CTA_SCREEN_TEL2
+    # Back-compat aliases (rest of function used these names)
+    tel_bold, tel_reg = disp_bold, disp_reg
 
     audio = AudioFileClip(audio_path)
     dur   = audio.duration
@@ -203,7 +227,7 @@ def build_video(item, audio_path, config, out_dir):
         .with_duration(main_dur).with_start(main_start)
         .with_position((0, int(H*0.28)))
     )
-    layers.append(make_text(f"📅 {date_str} | Telugu Horoscope",
+    layers.append(make_text(f"📅 {date_str} | {lang_label} Horoscope",
                             FONT_BOLD, 34, "#FFFFFF", W-20,
                             ("center",0.285), main_dur, stroke_width=2, start=main_start))
 
@@ -230,7 +254,7 @@ def build_video(item, audio_path, config, out_dir):
     if dur > CTA_END:
         cta_dur = CTA_END - CTA_START
         layers.extend(_make_cta_overlay(
-            CTA_SCREEN_TEL1, CTA_SCREEN_LATIN, CTA_SCREEN_TEL2,
+            cta1, CTA_SCREEN_LATIN, cta2,
             CTA_START, cta_dur, W, tel_bold, FONT_BOLD,
         ))
 

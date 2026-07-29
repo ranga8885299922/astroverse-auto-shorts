@@ -297,3 +297,187 @@ def generate_scripts(config: dict, grounding: dict | None = None,
 
     print(f"  ✓ Groq returned {len(all_scripts)} scripts total")
     return all_scripts
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HINDI PIPELINE (parallel to Telugu — separate so the working Telugu path is
+# never touched). Items use the SAME dict keys as Telugu (rasi_telugu /
+# highlight_telugu / script_telugu) so downstream build_video, tts_audio,
+# post_instagram work unchanged; the discriminator is item["lang"] == "hi".
+# ═══════════════════════════════════════════════════════════════════════════
+
+CTA_SPOKEN_HI = (
+    "अपनी शिक्षा, नौकरी, व्यापार, विवाह जैसे व्यक्तिगत सवालों के पूरे मुफ़्त "
+    "जवाब के लिए link कमेंट करें। मैं वेबसाइट लिंक reply करूँगा।"
+)
+
+RASI_HINDI = {
+    "Aries":"मेष राशि","Taurus":"वृषभ राशि","Gemini":"मिथुन राशि",
+    "Cancer":"कर्क राशि","Leo":"सिंह राशि","Virgo":"कन्या राशि",
+    "Libra":"तुला राशि","Scorpio":"वृश्चिक राशि","Sagittarius":"धनु राशि",
+    "Capricorn":"मकर राशि","Aquarius":"कुंभ राशि","Pisces":"मीन राशि",
+}
+RASI_LORD_HI = {
+    "Aries":"मंगल","Taurus":"शुक्र","Gemini":"बुध","Cancer":"चंद्र",
+    "Leo":"सूर्य","Virgo":"बुध","Libra":"शुक्र","Scorpio":"मंगल",
+    "Sagittarius":"गुरु (बृहस्पति)","Capricorn":"शनि","Aquarius":"शनि",
+    "Pisces":"गुरु (बृहस्पति)",
+}
+RASI_ELEMENT_HI = {
+    "Aries":"अग्नि","Leo":"अग्नि","Sagittarius":"अग्नि",
+    "Taurus":"पृथ्वी","Virgo":"पृथ्वी","Capricorn":"पृथ्वी",
+    "Gemini":"वायु","Libra":"वायु","Aquarius":"वायु",
+    "Cancer":"जल","Scorpio":"जल","Pisces":"जल",
+}
+FOCUS_ROTATION_HI = [
+    "करियर में बड़ा बदलाव", "अचानक धन लाभ", "प्रेम और विवाह",
+    "स्वास्थ्य में मोड़", "पारिवारिक शुभ समाचार", "शिक्षा और प्रतियोगी परीक्षा",
+    "व्यापार का अवसर", "यात्रा योग", "संपत्ति और वाहन",
+    "आध्यात्मिक प्रगति", "पुराने मित्रों से मुलाकात", "नई शुरुआत",
+]
+HINDI_WEEKDAY = {
+    0:"सोमवार", 1:"मंगलवार", 2:"बुधवार", 3:"गुरुवार",
+    4:"शुक्रवार", 5:"शनिवार", 6:"रविवार",
+}
+_TODAY_WORDS_HI = ("आज",)
+
+
+def _fix_weekday_hi(text: str, correct_day: str) -> str:
+    """Correct hallucinated weekday names in Hindi 'today' sentences."""
+    if not text:
+        return text
+    import re
+    parts = re.split(r"([।.!?\n])", text)
+    out = []
+    for seg in parts:
+        if any(w in seg for w in _TODAY_WORDS_HI):
+            for wd in HINDI_WEEKDAY.values():
+                if wd != correct_day and wd in seg:
+                    seg = seg.replace(wd, correct_day)
+        out.append(seg)
+    return "".join(out)
+
+
+def _call_groq_hindi(client, sign, theme, tone) -> list[dict]:
+    today, date_short, _ = _get_ist_dates()
+    tomorrow   = datetime.datetime.now(ZoneInfo("Asia/Kolkata")) + datetime.timedelta(days=1)
+    weekday_hi = HINDI_WEEKDAY[tomorrow.weekday()]
+
+    rasi_hi = RASI_HINDI.get(sign, sign)
+    lord    = RASI_LORD_HI.get(sign, "")
+    element = RASI_ELEMENT_HI.get(sign, "")
+    signs_order = list(RASI_HINDI.keys())
+    sign_idx    = signs_order.index(sign) if sign in signs_order else 0
+    day_of_year = tomorrow.timetuple().tm_yday
+    focus       = FOCUS_ROTATION_HI[(day_of_year + sign_idx) % len(FOCUS_ROTATION_HI)]
+
+    prompt = f"""Vedic astrologer. For {sign} ({rasi_hi}) on {today}. Theme of the day: {theme}. Tone: {tone}.
+
+DAY FACT (do not get this wrong): {today} is {weekday_hi}. If the script mentions today's weekday, it MUST be {weekday_hi}. Day names for remedies on OTHER days are allowed but never claim today is a different day.
+
+THIS RASI'S UNIQUE CONTEXT (must drive the whole reading):
+- Rasi lord (राशि स्वामी): {lord} — base the planetary reasoning on this lord's current influence.
+- Element (तत्व): {element}
+- TODAY'S MAIN FOCUS for {rasi_hi}: {focus} — the hook AND the strongest prediction must center on this focus.
+CRITICAL: 12 rasis get videos the same day and families watch together — make this reading CLEARLY specific to {rasi_hi}, with different events/areas/remedies than any other rasi would get.
+
+Return ONLY this JSON object. Start with {{ end with }}. No text outside:
+{{
+  "sign": "{sign}",
+  "rasi_hindi": "{rasi_hi}",
+  "highlight_hindi": "The single most distinctive prediction FROM script_hindi, rewritten as a dramatic hook in pure Hindi (Devanagari) — this is THIS video's THUMBNAIL AND TITLE, about today's focus ({focus}), and could not apply to any other rasi. COMPLETE sentence of 5 to 8 words. Present tense. NO hedging words.",
+  "script_hindi": "250 word horoscope in pure Hindi (Devanagari script). FIRST SENTENCE = a shocking curiosity hook about today's focus ({focus}) — NEVER start with a greeting like नमस्ते. Then cover in order: {lord} position and influence, career (करियर), money (धन), love/family (प्रेम/परिवार), health (स्वास्थ्य), 1 risk warning, 1 remedy (उपाय), lucky colour + lucky number, one-line closing blessing.",
+  "title_en": "{sign} - {date_short} | Hindi Daily Horoscope"
+}}
+
+SPECIFICITY RULES for script_hindi — every prediction must be SPECIFIC with concrete details, NEVER generic one-liners:
+- HEALTH: name a body part/condition + a concrete action (e.g. "गले से जुड़ी समस्या हो सकती है, ठंडी चीज़ें कम करें"). NOT "सेहत का ध्यान रखें".
+- MONEY: name the specific source (e.g. "पुराना उधार वापस मिलेगा", "दोपहर बाद फ़िज़ूलख़र्च से बचें"). NOT "धन लाभ".
+- CAREER: name the specific work situation (e.g. "वरिष्ठ अधिकारियों से तारीफ़ मिलेगी", "नई ज़िम्मेदारी सौंपी जाएगी"). NOT "नौकरी में अच्छा दिन".
+- LOVE/FAMILY: name the specific person/event (e.g. "जीवनसाथी के सहयोग से एक समस्या सुलझेगी", "बच्चों की पढ़ाई की शुभ ख़बर"). NOT "परिवार अच्छा रहेगा".
+- REMEDY: name a specific deity + day + action (e.g. "मंगलवार को हनुमान जी को सिंदूर चढ़ाएँ", "शुक्रवार को लक्ष्मी जी को कमल चढ़ाएँ"). NOT "भगवान से प्रार्थना करें".
+Vary the specifics daily so each day feels fresh and personally written by a real astrologer."""
+
+    last_error = None
+    for attempt in range(3):
+        try:
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system",
+                     "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.85,
+                max_tokens=3000,
+            )
+            raw = response.choices[0].message.content.strip()
+            if "```" in raw:
+                for part in raw.split("```"):
+                    part = part.strip()
+                    if part.startswith("json"):
+                        part = part[4:].strip()
+                    if part.startswith("{"):
+                        raw = part
+                        break
+            start = raw.find("{"); end = raw.rfind("}") + 1
+            if start == -1 or end <= 1:
+                raise ValueError("No JSON object found")
+            obj = json.loads(raw[start:end])
+            for key in ("sign", "script_hindi", "highlight_hindi"):
+                if not obj.get(key):
+                    raise ValueError(f"Missing key: {key}")
+
+            script_hi   = _fix_weekday_hi(obj["script_hindi"], weekday_hi)
+            highlight_hi = _fix_weekday_hi(obj["highlight_hindi"], weekday_hi)
+
+            # CTA after the 2nd sentence boundary (hook stays first)
+            boundaries = [i + 1 for i, ch in enumerate(script_hi)
+                          if ch in ("।", ".", "?", "!")]
+            cut = boundaries[1] if len(boundaries) >= 2 else (
+                  boundaries[0] if boundaries else len(script_hi))
+            head = script_hi[:cut].strip()
+            tail = script_hi[cut:].strip()
+            audio_script = head + " " + CTA_SPOKEN_HI + (" " + tail if tail else "")
+
+            # Reuse the *_telugu key names so downstream code is unchanged;
+            # they hold Hindi text and item["lang"]="hi" marks the language.
+            return [{
+                "sign":           sign,
+                "lang":           "hi",
+                "language":       "Hindi",
+                "language_code":  "hi-IN",
+                "rasi_telugu":    rasi_hi,        # holds Hindi rasi
+                "highlight_telugu": highlight_hi, # holds Hindi hook
+                "script_telugu":  script_hi,      # holds Hindi display script
+                "script":         audio_script,   # Hindi audio (hook→CTA→rest)
+                "title_yt":       build_title(highlight_hi, rasi_hi, date_short),
+                "planet":         None,
+                "theme":          theme,
+            }]
+
+        except json.JSONDecodeError as e:
+            last_error = f"JSON error: {e}"; time.sleep(5)
+        except ValueError as e:
+            last_error = str(e); time.sleep(5)
+        except Exception as e:
+            if "429" in str(e):
+                time.sleep(70); last_error = str(e)
+            else:
+                raise
+    raise RuntimeError(f"Hindi failed after 3 attempts for {sign}. Last: {last_error}")
+
+
+def generate_scripts_hindi(config: dict) -> list[dict]:
+    client = Groq(api_key=os.environ["GROQ_API_KEY"])
+    signs  = config["signs"]
+    theme  = config["daily_theme"]
+    tone   = config["tone"]
+    out = []
+    for i, sign in enumerate(signs, 1):
+        print(f"  → [HI] Sign {i}/{len(signs)}: {sign}...")
+        out.extend(_call_groq_hindi(client, sign, theme, tone))
+        if i < len(signs):
+            time.sleep(4)
+    print(f"  ✓ Groq returned {len(out)} Hindi scripts")
+    return out

@@ -44,6 +44,9 @@ jobs:
           # Instagram Reels auto-publish — optional, skipped if unset
           IG_USER_ID:           ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN:      ${{ secrets.IG_ACCESS_TOKEN }}
+          # Hindi channel (astroloz.hindi) — optional, skipped if unset
+          IG_HINDI_USER_ID:      ${{ secrets.IG_HINDI_USER_ID }}
+          IG_HINDI_ACCESS_TOKEN: ${{ secrets.IG_HINDI_ACCESS_TOKEN }}
         run: python main.py
 
       - name: Upload run log

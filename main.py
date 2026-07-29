@@ -22,7 +22,7 @@ import traceback
 import os
 import shutil
 
-from generate_script    import generate_scripts
+from generate_script    import generate_scripts, generate_scripts_hindi
 from tts_audio          import synthesize
 from build_video        import build_video
 from upload_youtube     import upload_video
@@ -119,8 +119,20 @@ def main():
         print("\n[1/4] Fetching BPHS grounding from Supabase...")
         grounding = fetch_bphs_grounding(config["signs"])
 
-    print("\n[1/4] Generating scripts via Groq...")
+    print("\n[1/4] Generating Telugu scripts via Groq...")
     items = generate_scripts(config, grounding, top_hooks)
+
+    # ── Hindi (astroloz.hindi, Instagram only) — added as a second activity ──
+    hindi_token = os.environ.get("IG_HINDI_ACCESS_TOKEN")
+    if config.get("enable_hindi", True) and hindi_token:
+        print("\n[1/4] Generating Hindi scripts via Groq...")
+        try:
+            items += generate_scripts_hindi(config)
+        except Exception as e:
+            print(f"      ⚠ Hindi generation failed (non-fatal): {e}")
+    elif config.get("enable_hindi", True):
+        print("      (Hindi off — IG_HINDI_ACCESS_TOKEN not set)")
+
     total = len(items)
     print(f"      ✓ {total} scripts ready\n")
 
@@ -130,7 +142,7 @@ def main():
 
     ig_on = instagram_enabled()
     if not ig_on:
-        print("      (IG auto-publish off — IG_USER_ID/IG_ACCESS_TOKEN/SUPABASE_* not set)")
+        print("      (Telugu IG auto-publish off — IG_ACCESS_TOKEN/SUPABASE_* not set)")
 
     # ── Step 2-4: Process each item — INSTAGRAM FIRST (primary target) ────────
     for i, item in enumerate(items, 1):
@@ -161,16 +173,22 @@ def main():
             print(f"        → MoviePy render...")
             video_path = build_video(item, audio_path, config, OUT_DIR)
 
+            is_hindi = item.get("lang") == "hi"
+            # Hindi → astroloz.hindi token; Telugu → default (env IG_ACCESS_TOKEN)
+            ig_token = hindi_token if is_hindi else None
+            ig_target_on = bool(ig_token) if is_hindi else ig_on
+
             # 4a. INSTAGRAM first — optimise + publish (with retry inside)
             insta_path = None
             try:
                 insta_path = optimize_for_instagram(video_path, INSTA_DIR)
             except Exception as e:
                 print(f"        ⚠ IG optimise failed (non-fatal): {e}")
-            if ig_on and insta_path:
+            if ig_target_on and insta_path:
                 try:
-                    print(f"        → Instagram Reel...")
-                    media_id = post_to_instagram(item, insta_path)
+                    acct = "astroloz.hindi" if is_hindi else "astroloz_com"
+                    print(f"        → Instagram Reel → {acct}...")
+                    media_id = post_to_instagram(item, insta_path, token=ig_token)
                     if media_id:
                         ig_posted += 1
                         entry["ig_media_id"] = media_id
@@ -179,14 +197,18 @@ def main():
                     entry["error"] += f"IG: {e}; "
                     print(f"        ⚠ Reel publish failed after retries: {e}")
 
-            # 4b. YouTube second
-            print(f"        → YouTube upload...")
-            vid_id = upload_video(item, video_path, config)
-
-            entry["status"]  = "SUCCESS"
-            entry["video_id"] = vid_id
-            success_count += 1
-            print(f"        ✓ https://youtube.com/shorts/{vid_id}")
+            # 4b. YouTube — Telugu only (Hindi is Instagram-only)
+            if is_hindi:
+                entry["status"] = "SUCCESS"
+                success_count += 1
+                print(f"        ✓ Hindi Reel done (no YouTube)")
+            else:
+                print(f"        → YouTube upload...")
+                vid_id = upload_video(item, video_path, config)
+                entry["status"]  = "SUCCESS"
+                entry["video_id"] = vid_id
+                success_count += 1
+                print(f"        ✓ https://youtube.com/shorts/{vid_id}")
 
         except Exception as e:
             entry["status"] = "FAILED"

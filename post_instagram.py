@@ -52,6 +52,18 @@ IG_CAPTION_TEMPLATE = (
 IG_FIRST_COMMENT = (
     "🌟 మీ రాశి పూర్తి జాతకం, lucky time, remedies అన్నీ ఉచితంగా 👉 astroloz.com"
 )
+
+# Hindi caption + first comment (used when item["lang"] == "hi")
+IG_CAPTION_HI = (
+    "{hook}\n\n"
+    "{rasi} आज का राशिफल 🔮\n\n"
+    "अपनी पूरी व्यक्तिगत कुंडली मुफ़्त — bio में लिंक / astroloz.com\n\n"
+    "#HindiHoroscope #राशिफल #DailyHoroscope #Astrology #{sign} "
+    "#HindiReels #Jyotish #astroloz"
+)
+IG_FIRST_COMMENT_HI = (
+    "🌟 आपकी पूरी कुंडली, lucky time, remedies सब कुछ मुफ़्त 👉 astroloz.com"
+)
 # ──────────────────────────────────────────────────────────────────────────────
 
 PUBLISH_RETRIES = 1    # one automatic retry when a publish attempt fails
@@ -100,19 +112,20 @@ def _storage_delete(object_name: str) -> None:
         pass  # cleanup is best-effort; bucket is also cleared by date folders
 
 
-def post_to_instagram(item: dict, video_path: str) -> str | None:
+def post_to_instagram(item: dict, video_path: str, token: str | None = None) -> str | None:
     """
-    Publish one video as a Reel with automatic retry (transient container
-    timeouts were causing occasional missing Reels). Returns the IG media id,
-    or None on skip. Raises after all attempts fail.
+    Publish one video as a Reel with automatic retry. `token` selects the
+    target account (defaults to the Telugu IG_ACCESS_TOKEN); pass the Hindi
+    token to publish to astroloz.hindi. Returns the IG media id or None.
     """
-    if not instagram_enabled():
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    if not (token and os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY")):
         return None
 
     last_err = None
     for attempt in range(PUBLISH_RETRIES + 1):
         try:
-            return _publish_once(item, video_path)
+            return _publish_once(item, video_path, token)
         except Exception as e:
             last_err = e
             if attempt < PUBLISH_RETRIES:
@@ -122,10 +135,12 @@ def post_to_instagram(item: dict, video_path: str) -> str | None:
     raise last_err
 
 
-def _publish_once(item: dict, video_path: str) -> str | None:
-    token = os.environ["IG_ACCESS_TOKEN"]
+def _publish_once(item: dict, video_path: str, token: str) -> str | None:
+    is_hindi = item.get("lang") == "hi"
+    caption_tmpl  = IG_CAPTION_HI if is_hindi else IG_CAPTION_TEMPLATE
+    first_comment = IG_FIRST_COMMENT_HI if is_hindi else IG_FIRST_COMMENT
 
-    caption = IG_CAPTION_TEMPLATE.format(
+    caption = caption_tmpl.format(
         hook=" ".join((item.get("highlight_telugu") or "").split()),
         rasi=item.get("rasi_telugu", item.get("sign", "")),
         sign=item.get("sign", ""),
@@ -176,7 +191,7 @@ def _publish_once(item: dict, video_path: str) -> str | None:
             try:
                 requests.post(
                     f"{IG_API}/{media_id}/comments",
-                    params={"message": IG_FIRST_COMMENT, "access_token": token},
+                    params={"message": first_comment, "access_token": token},
                     timeout=30,
                 )
             except Exception as e:
