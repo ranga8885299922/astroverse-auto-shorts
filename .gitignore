@@ -19,3 +19,7 @@ __pycache__/
 
 # Logs (optional — remove this line if you want to track logs in git)
 # logs/
+
+# Leaked secret helper files — never commit
+GITHUB_SECRETS.txt
+FIRST_RUN.bat
