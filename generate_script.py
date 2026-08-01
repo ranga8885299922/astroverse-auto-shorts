@@ -69,6 +69,34 @@ SIGN_SYMBOLS = {
     "Sagittarius":"♐","Capricorn":"♑","Aquarius":"♒","Pisces":"♓"
 }
 
+# Each sign's ruling planet — used to make lucky colour / number / remedy
+# astrologically CONSISTENT with the rasi (and therefore different across
+# signs, killing the "every sign got blue" repetition).
+SIGN_PLANET = {
+    "Aries":"Mars","Taurus":"Venus","Gemini":"Mercury","Cancer":"Moon",
+    "Leo":"Sun","Virgo":"Mercury","Libra":"Venus","Scorpio":"Mars",
+    "Sagittarius":"Jupiter","Capricorn":"Saturn","Aquarius":"Saturn","Pisces":"Jupiter",
+}
+# planet → (lucky colour, lucky number, remedy) — traditional Vedic associations
+LUCKY_TE = {
+    "Sun":     ("ఎరుపు లేదా నారింజ", 1, "ఆదివారం సూర్యుడికి ఉదయాన్నే జలం సమర్పించండి"),
+    "Moon":    ("తెలుపు లేదా వెండి రంగు", 2, "సోమవారం శివుడికి పాలతో అభిషేకం చేయండి"),
+    "Mars":    ("ఎరుపు", 9, "మంగళవారం ఆంజనేయస్వామికి సింధూరం సమర్పించండి"),
+    "Mercury": ("ఆకుపచ్చ", 5, "బుధవారం గణపతికి గరిక సమర్పించండి"),
+    "Jupiter": ("పసుపు లేదా బంగారు రంగు", 3, "గురువారం విష్ణువుకు పసుపు పూలు సమర్పించండి"),
+    "Venus":   ("తెలుపు లేదా గులాబీ", 6, "శుక్రవారం లక్ష్మీదేవికి తామర పువ్వులు సమర్పించండి"),
+    "Saturn":  ("నీలం లేదా నలుపు", 8, "శనివారం శనీశ్వరుడికి నువ్వుల నూనె దీపం వెలిగించండి"),
+}
+LUCKY_HI = {
+    "Sun":     ("लाल या नारंगी", 1, "रविवार को सूर्य देव को सुबह जल चढ़ाएँ"),
+    "Moon":    ("सफ़ेद या चाँदी जैसा", 2, "सोमवार को शिव जी का दूध से अभिषेक करें"),
+    "Mars":    ("लाल", 9, "मंगलवार को हनुमान जी को सिंदूर चढ़ाएँ"),
+    "Mercury": ("हरा", 5, "बुधवार को गणेश जी को दूर्वा चढ़ाएँ"),
+    "Jupiter": ("पीला या सुनहरा", 3, "गुरुवार को विष्णु जी को पीले फूल चढ़ाएँ"),
+    "Venus":   ("सफ़ेद या गुलाबी", 6, "शुक्रवार को लक्ष्मी जी को कमल चढ़ाएँ"),
+    "Saturn":  ("नीला या काला", 8, "शनिवार को शनि देव को तिल के तेल का दीपक जलाएँ"),
+}
+
 # Telugu weekday names — Python weekday(): Monday=0 … Sunday=6
 TELUGU_WEEKDAY = {
     0: "సోమవారం", 1: "మంగళవారం", 2: "బుధవారం", 3: "గురువారం",
@@ -172,6 +200,7 @@ def _call_groq(client, sign, languages, theme, tone, grounding=None,
     sign_idx    = signs_order.index(sign) if sign in signs_order else 0
     day_of_year = datetime.datetime.now(ZoneInfo("Asia/Kolkata")).timetuple().tm_yday
     focus       = FOCUS_ROTATION[(day_of_year + sign_idx) % len(FOCUS_ROTATION)]
+    luck_color, luck_num, luck_remedy = LUCKY_TE.get(SIGN_PLANET.get(sign, "Sun"))
 
     prompt = f"""Vedic astrologer. For {sign} ({rasi_telugu}) on {today}. Theme of the day: {theme}. Tone: {tone}.
 
@@ -191,23 +220,29 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
   "language": "{lang['name']}",
   "language_code": "{lang['code']}",
   "highlight_telugu": "The single most distinctive prediction FROM script_telugu, rewritten as a dramatic hook — this is THIS video's THUMBNAIL AND TITLE. It must be about today's main focus ({focus}) and could not apply to any other rasi's video today. COMPLETE sentence of 5 to 8 words. Present tense. NO hedging words like 'maybe/might/possibly'.",
-  "script_telugu": "250 word horoscope in pure Telugu script. FIRST SENTENCE = a shocking curiosity hook about today's main focus ({focus}) for this rasi (viewers decide to stay in 3 seconds) — NEVER start with a greeting like నమస్కారం or 'ఈరోజు మీకు'. Then cover in order: {lord} position and influence, career, money, love/family, health, 1 risk warning, 1 remedy, lucky color + lucky number, one-line closing blessing.",
+  "script_telugu": "250 word horoscope in pure Telugu script. FIRST SENTENCE = a shocking curiosity hook about today's main focus ({focus}) for this rasi (viewers decide to stay in 3 seconds) — NEVER start with a greeting like నమస్కారం or 'ఈరోజు మీకు'. Then cover in order: {lord} position and influence, career, money, love/family, health, 1 risk warning, then the remedy + lucky colour + lucky number EXACTLY as specified below, then a one-line closing blessing.",
   "title_en": "{sign} - {date_short} | Telugu Daily Horoscope"
 }}
 
-SPECIFICITY RULES for script_telugu — every prediction must be SPECIFIC with concrete details. NEVER write generic one-line predictions:
-- HEALTH: name a specific body part or condition + a concrete action. Like "గొంతు సంబంధిత సమస్యలు వచ్చే అవకాశం ఉంది, చల్లని పదార్థాలు తగ్గించండి" or "కంటి ఒత్తిడి పెరగవచ్చు, స్క్రీన్ సమయం తగ్గించండి". NOT "ఆరోగ్యం జాగ్రత్త".
-- MONEY: name the specific source or situation. Like "పాత బాకీలు తిరిగి వస్తాయి" or "రియల్ ఎస్టేట్ పెట్టుబడికి అనుకూల సమయం" or "అనవసర ఖర్చులు మధ్యాహ్నం తర్వాత జాగ్రత్త". NOT "ధన లాభం".
-- CAREER: name the specific work situation. Like "పై అధికారుల నుండి ప్రశంసలు లభిస్తాయి" or "కొత్త ప్రాజెక్ట్ బాధ్యత మీకు అప్పగించబడుతుంది" or "సహోద్యోగులతో మాట పట్టింపులకు పోవద్దు". NOT "ఉద్యోగంలో మంచి రోజు".
-- LOVE/FAMILY: name the specific person or event. Like "జీవిత భాగస్వామి మద్దతుతో ఒక ముఖ్యమైన సమస్య నుండి బయటపడతారు" or "పిల్లల చదువు విషయంలో శుభవార్త వింటారు". NOT "కుటుంబం బాగుంటుంది".
-- REMEDY: name a specific deity + day + action. Like "మంగళవారం ఆంజనేయస్వామికి సింధూరం సమర్పించండి" or "శుక్రవారం లక్ష్మీ దేవికి తామర పువ్వులు సమర్పించండి". NOT "దేవుడిని ప్రార్థించండి".
-Vary the specifics daily so each day feels fresh and personally written by a real astrologer."""
+FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
+- Lucky colour: {luck_color}
+- Lucky number: {luck_num}
+- Remedy (tied to rasi lord {lord}): {luck_remedy}
+(These come from {rasi_telugu}'s ruling planet, so they differ from other rasis — always use them.)
+
+SPECIFICITY & ANTI-REPETITION (most important rule):
+Every prediction must be SPECIFIC and ORIGINAL to {rasi_telugu} today. The notes below describe the STYLE in English — they are NOT text to translate or reuse. Write your OWN fresh Telugu sentences. Two different rasis must NEVER share the same health issue, the same money event, or the same love event on the same day — invent different concrete details each time.
+- HEALTH: name a specific body part/condition + a concrete action (not "take care of health"). Pick an issue that fits {rasi_telugu}'s element ({element}) — do not default to throat/cold-food every time.
+- MONEY: name a specific source or situation (a returned loan, a property decision, an afternoon overspend risk, a bonus, a family expense) — vary it.
+- CAREER: name a specific work situation (praise from a senior, a new responsibility, a colleague friction, an interview, a transfer) — vary it.
+- LOVE/FAMILY: name a specific person or event (spouse, child's news, a parent, an old friend, a proposal) — vary it.
+Make it feel personally written by a real astrologer who is reading THIS rasi's chart, not a template."""
 
     last_error = None
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
                 messages=[
                     {
                         "role": "system",
@@ -384,6 +419,7 @@ def _call_groq_hindi(client, sign, theme, tone) -> list[dict]:
     sign_idx    = signs_order.index(sign) if sign in signs_order else 0
     day_of_year = tomorrow.timetuple().tm_yday
     focus       = FOCUS_ROTATION_HI[(day_of_year + sign_idx) % len(FOCUS_ROTATION_HI)]
+    luck_color, luck_num, luck_remedy = LUCKY_HI.get(SIGN_PLANET.get(sign, "Sun"))
 
     prompt = f"""Vedic astrologer. For {sign} ({rasi_hi}) on {today}. Theme of the day: {theme}. Tone: {tone}.
 
@@ -400,23 +436,29 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
   "sign": "{sign}",
   "rasi_hindi": "{rasi_hi}",
   "highlight_hindi": "The single most distinctive prediction FROM script_hindi, rewritten as a dramatic hook in pure Hindi (Devanagari) — this is THIS video's THUMBNAIL AND TITLE, about today's focus ({focus}), and could not apply to any other rasi. COMPLETE sentence of 5 to 8 words. Present tense. NO hedging words.",
-  "script_hindi": "250 word horoscope in pure Hindi (Devanagari script). FIRST SENTENCE = a shocking curiosity hook about today's focus ({focus}) — NEVER start with a greeting like नमस्ते. Then cover in order: {lord} position and influence, career (करियर), money (धन), love/family (प्रेम/परिवार), health (स्वास्थ्य), 1 risk warning, 1 remedy (उपाय), lucky colour + lucky number, one-line closing blessing.",
+  "script_hindi": "250 word horoscope in pure Hindi (Devanagari script). FIRST SENTENCE = a shocking curiosity hook about today's focus ({focus}) — NEVER start with a greeting like नमस्ते. Then cover in order: {lord} position and influence, career (करियर), money (धन), love/family (प्रेम/परिवार), health (स्वास्थ्य), 1 risk warning, then the remedy + lucky colour + lucky number EXACTLY as specified below, then a one-line closing blessing.",
   "title_en": "{sign} - {date_short} | Hindi Daily Horoscope"
 }}
 
-SPECIFICITY RULES for script_hindi — every prediction must be SPECIFIC with concrete details, NEVER generic one-liners:
-- HEALTH: name a body part/condition + a concrete action (e.g. "गले से जुड़ी समस्या हो सकती है, ठंडी चीज़ें कम करें"). NOT "सेहत का ध्यान रखें".
-- MONEY: name the specific source (e.g. "पुराना उधार वापस मिलेगा", "दोपहर बाद फ़िज़ूलख़र्च से बचें"). NOT "धन लाभ".
-- CAREER: name the specific work situation (e.g. "वरिष्ठ अधिकारियों से तारीफ़ मिलेगी", "नई ज़िम्मेदारी सौंपी जाएगी"). NOT "नौकरी में अच्छा दिन".
-- LOVE/FAMILY: name the specific person/event (e.g. "जीवनसाथी के सहयोग से एक समस्या सुलझेगी", "बच्चों की पढ़ाई की शुभ ख़बर"). NOT "परिवार अच्छा रहेगा".
-- REMEDY: name a specific deity + day + action (e.g. "मंगलवार को हनुमान जी को सिंदूर चढ़ाएँ", "शुक्रवार को लक्ष्मी जी को कमल चढ़ाएँ"). NOT "भगवान से प्रार्थना करें".
-Vary the specifics daily so each day feels fresh and personally written by a real astrologer."""
+FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
+- Lucky colour (शुभ रंग): {luck_color}
+- Lucky number (शुभ अंक): {luck_num}
+- Remedy (उपाय, tied to rasi lord {lord}): {luck_remedy}
+(These come from {rasi_hi}'s ruling planet, so they differ from other rasis — always use them.)
+
+SPECIFICITY & ANTI-REPETITION (most important rule):
+Every prediction must be SPECIFIC and ORIGINAL to {rasi_hi} today. The notes below describe the STYLE in English — they are NOT text to translate or reuse. Write your OWN fresh Hindi sentences. Two different rasis must NEVER share the same health issue, money event, or love event on the same day — invent different concrete details each time.
+- HEALTH: a specific body part/condition + a concrete action; pick one fitting {rasi_hi}'s element ({element}) — do not default to throat/cold-food every time.
+- MONEY: a specific source/situation (returned loan, property decision, afternoon overspend, bonus, family expense) — vary it.
+- CAREER: a specific work situation (praise from a senior, new responsibility, colleague friction, interview, transfer) — vary it.
+- LOVE/FAMILY: a specific person/event (spouse, child's news, a parent, an old friend, a proposal) — vary it.
+Make it feel personally written by a real astrologer reading THIS rasi's chart, not a template."""
 
     last_error = None
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
                 messages=[
                     {"role": "system",
                      "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
