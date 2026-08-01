@@ -97,9 +97,23 @@ def fix_weekday(text: str, correct_day: str) -> str:
     return "".join(out)
 
 
+# Frozen ONCE on the first call, then reused for the whole run. This makes
+# every video (all 12 Telugu + 12 Hindi) share the exact same date even if
+# the run crosses IST midnight midway — otherwise the later-generated Hindi
+# scripts could land on the next day. One process = one run = one date.
+_TOMORROW_CACHE = None
+
+
+def _ist_tomorrow() -> datetime.datetime:
+    global _TOMORROW_CACHE
+    if _TOMORROW_CACHE is None:
+        _TOMORROW_CACHE = (datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
+                           + datetime.timedelta(days=1))
+    return _TOMORROW_CACHE
+
+
 def _get_ist_dates():
-    ist_now    = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
-    tomorrow   = ist_now + datetime.timedelta(days=1)
+    tomorrow   = _ist_tomorrow()
     today_str  = tomorrow.strftime("%B %d, %Y")
     date_short = tomorrow.strftime("%b %d %Y")
     weekday_te = TELUGU_WEEKDAY[tomorrow.weekday()]
@@ -360,7 +374,7 @@ def _fix_weekday_hi(text: str, correct_day: str) -> str:
 
 def _call_groq_hindi(client, sign, theme, tone) -> list[dict]:
     today, date_short, _ = _get_ist_dates()
-    tomorrow   = datetime.datetime.now(ZoneInfo("Asia/Kolkata")) + datetime.timedelta(days=1)
+    tomorrow   = _ist_tomorrow()   # same frozen date as Telugu — immune to midnight crossing
     weekday_hi = HINDI_WEEKDAY[tomorrow.weekday()]
 
     rasi_hi = RASI_HINDI.get(sign, sign)
