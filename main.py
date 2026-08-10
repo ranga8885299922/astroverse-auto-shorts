@@ -80,6 +80,13 @@ def main():
         config["daily_theme"] = THEME_ROTATION[weekday]
         print(f"  Theme : {config['daily_theme']}")
 
+    # ── Instagram publishing pause switch (config.json) ───────────────────────
+    # When false: NO Reels published, NO IG artifacts created, and Hindi (which
+    # is Instagram-only) is skipped. YouTube is completely unaffected.
+    ig_publish = config.get("instagram_publish_enabled", True)
+    if not ig_publish:
+        print("  Instagram publishing: PAUSED (flag off)")
+
     # Clear yesterday's videos so storage never fills up (mobile-friendly)
     print("\n  🧹 Clearing old videos from output/ and instagram/ ...")
     clear_dir(OUT_DIR)
@@ -123,13 +130,17 @@ def main():
     items = generate_scripts(config, grounding, top_hooks)
 
     # ── Hindi (astroloz.hindi, Instagram only) — added as a second activity ──
+    # Hindi has NO YouTube destination, so it is skipped whenever Instagram
+    # publishing is paused.
     hindi_token = os.environ.get("IG_HINDI_ACCESS_TOKEN")
-    if config.get("enable_hindi", True) and hindi_token:
+    if ig_publish and config.get("enable_hindi", True) and hindi_token:
         print("\n[1/4] Generating Hindi scripts via Groq...")
         try:
             items += generate_scripts_hindi(config)
         except Exception as e:
             print(f"      ⚠ Hindi generation failed (non-fatal): {e}")
+    elif not ig_publish and config.get("enable_hindi", True):
+        print("      (Hindi skipped — Instagram publishing paused; Hindi is Instagram-only)")
     elif config.get("enable_hindi", True):
         print("      (Hindi off — IG_HINDI_ACCESS_TOKEN not set)")
 
@@ -140,8 +151,8 @@ def main():
     fail_count    = 0
     ig_posted     = 0
 
-    ig_on = instagram_enabled()
-    if not ig_on:
+    ig_on = ig_publish and instagram_enabled()
+    if ig_publish and not instagram_enabled():
         print("      (Telugu IG auto-publish off — IG_ACCESS_TOKEN/SUPABASE_* not set)")
 
     # ── Step 2-4: Process each item — INSTAGRAM FIRST (primary target) ────────
@@ -174,28 +185,31 @@ def main():
             video_path = build_video(item, audio_path, config, OUT_DIR)
 
             is_hindi = item.get("lang") == "hi"
-            # Hindi → astroloz.hindi token; Telugu → default (env IG_ACCESS_TOKEN)
-            ig_token = hindi_token if is_hindi else None
-            ig_target_on = bool(ig_token) if is_hindi else ig_on
 
-            # 4a. INSTAGRAM first — optimise + publish (with retry inside)
-            insta_path = None
-            try:
-                insta_path = optimize_for_instagram(video_path, INSTA_DIR)
-            except Exception as e:
-                print(f"        ⚠ IG optimise failed (non-fatal): {e}")
-            if ig_target_on and insta_path:
+            # 4a. INSTAGRAM — optimise + publish. Fully gated by the pause flag:
+            # when instagram_publish_enabled is false, NO IG artifact is created
+            # and NO Instagram API call is made (no publish, no retry).
+            if ig_publish:
+                # Hindi → astroloz.hindi token; Telugu → default (env IG_ACCESS_TOKEN)
+                ig_token = hindi_token if is_hindi else None
+                ig_target_on = bool(ig_token) if is_hindi else ig_on
+                insta_path = None
                 try:
-                    acct = "astroloz.hindi" if is_hindi else "astroloz_com"
-                    print(f"        → Instagram Reel → {acct}...")
-                    media_id = post_to_instagram(item, insta_path, token=ig_token)
-                    if media_id:
-                        ig_posted += 1
-                        entry["ig_media_id"] = media_id
-                        print(f"        ✓ Reel published (media {media_id})")
+                    insta_path = optimize_for_instagram(video_path, INSTA_DIR)
                 except Exception as e:
-                    entry["error"] += f"IG: {e}; "
-                    print(f"        ⚠ Reel publish failed after retries: {e}")
+                    print(f"        ⚠ IG optimise failed (non-fatal): {e}")
+                if ig_target_on and insta_path:
+                    try:
+                        acct = "astroloz.hindi" if is_hindi else "astroloz_com"
+                        print(f"        → Instagram Reel → {acct}...")
+                        media_id = post_to_instagram(item, insta_path, token=ig_token)
+                        if media_id:
+                            ig_posted += 1
+                            entry["ig_media_id"] = media_id
+                            print(f"        ✓ Reel published (media {media_id})")
+                    except Exception as e:
+                        entry["error"] += f"IG: {e}; "
+                        print(f"        ⚠ Reel publish failed after retries: {e}")
 
             # 4b. YouTube — Telugu only (Hindi is Instagram-only)
             if is_hindi:
@@ -227,8 +241,11 @@ def main():
 
         log_entry(entry)
 
-    print(f"\n      videos in '{INSTA_DIR}/' for download"
-          + (f", {ig_posted} Reel(s) auto-published" if ig_on else ""))
+    if ig_publish:
+        print(f"\n      videos in '{INSTA_DIR}/' for download"
+              + (f", {ig_posted} Reel(s) auto-published" if ig_on else ""))
+    else:
+        print("\n      Instagram publishing: PAUSED (flag off) — YouTube ran normally")
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)

@@ -57,14 +57,14 @@ jobs:
           path: logs/run_log.csv
           retention-days: 30
 
-      # Instagram-optimised videos — download this artifact to your phone
-      # (GitHub mobile site → this run → Artifacts → instagram-shorts).
-      # Uploaded even if some YouTube uploads failed, since videos are built first.
-      - name: Upload Instagram shorts (for offline / mobile download)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: instagram-shorts-${{ github.run_id }}
-          path: instagram/*.mp4
-          retention-days: 7
-          if-no-files-found: warn
+      # PAUSED: Instagram publishing disabled due to content flag —
+      # do not re-enable until video redesign is complete.
+      # (Also set instagram_publish_enabled: true in config.json when resuming.)
+      # - name: Upload Instagram shorts (for offline / mobile download)
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: instagram-shorts-${{ github.run_id }}
+      #     path: instagram/*.mp4
+      #     retention-days: 7
+      #     if-no-files-found: warn

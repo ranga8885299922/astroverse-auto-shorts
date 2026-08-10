@@ -18,6 +18,8 @@
   "tone": "warm, motivational, Vedic",
   "use_bphs_grounding": false,
   "use_hook_feedback": false,
+  "instagram_publish_enabled": false,
+  "_instagram_note": "false = pause ALL Instagram publishing (no Reels posted, no IG artifacts, Hindi skipped since it is IG-only). YouTube is unaffected. Set true to resume after video redesign. Paused 2026-08 due to unoriginal-content flag.",
   "enable_hindi": true,
   "_hindi_note": "enable_hindi generates 12 Hindi shorts -> astroloz.hindi Instagram only (no YouTube). Needs IG_HINDI_ACCESS_TOKEN secret; skipped silently if unset.",
   "_content_flags_note": "use_bphs_grounding: Parashara sutras in prompt. use_hook_feedback: steer hooks by past view counts. Both false = pure AI content like the well-performing early version. Set true to re-enable.",
