@@ -87,6 +87,14 @@ def main():
     if not ig_publish:
         print("  Instagram publishing: PAUSED (flag off)")
 
+    # ── YouTube publishing switch (env, set by the workflow input) ────────────
+    # Default true. A manual "Instagram-only" run passes youtube_enabled=false,
+    # so we render + post the Telugu Reels but skip the YouTube upload. Scheduled
+    # runs never set it, so YouTube uploads as normal.
+    yt_publish = os.environ.get("YOUTUBE_PUBLISH_ENABLED", "true").strip().lower() != "false"
+    if not yt_publish:
+        print("  YouTube publishing: SKIPPED (Instagram-only run)")
+
     # Clear yesterday's videos so storage never fills up (mobile-friendly)
     print("\n  🧹 Clearing old videos from output/ and instagram/ ...")
     clear_dir(OUT_DIR)
@@ -220,6 +228,10 @@ def main():
                 entry["status"] = "SUCCESS"
                 success_count += 1
                 print(f"        ✓ Hindi Reel done (no YouTube)")
+            elif not yt_publish:
+                entry["status"] = "SUCCESS"
+                success_count += 1
+                print(f"        ✓ Telugu Reel done (YouTube skipped — Instagram-only run)")
             else:
                 print(f"        → YouTube upload...")
                 vid_id = upload_video(item, video_path, config)
