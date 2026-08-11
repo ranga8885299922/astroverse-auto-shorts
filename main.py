@@ -130,19 +130,23 @@ def main():
     items = generate_scripts(config, grounding, top_hooks)
 
     # ── Hindi (astroloz.hindi, Instagram only) — added as a second activity ──
-    # Hindi has NO YouTube destination, so it is skipped whenever Instagram
-    # publishing is paused.
+    # Hindi has NO YouTube destination. It is gated by its own enable_hindi flag
+    # (astroloz.hindi was flagged for unoriginal content 2026-08 → paused there)
+    # AND by the global instagram_publish_enabled kill-switch. Telugu is separate.
     hindi_token = os.environ.get("IG_HINDI_ACCESS_TOKEN")
-    if ig_publish and config.get("enable_hindi", True) and hindi_token:
+    hindi_wanted = config.get("enable_hindi", True)
+    if not hindi_wanted:
+        print("      Hindi channel (astroloz.hindi): PAUSED (enable_hindi off)")
+    elif not ig_publish:
+        print("      (Hindi skipped — Instagram publishing paused; Hindi is Instagram-only)")
+    elif not hindi_token:
+        print("      (Hindi off — IG_HINDI_ACCESS_TOKEN not set)")
+    else:
         print("\n[1/4] Generating Hindi scripts via Groq...")
         try:
             items += generate_scripts_hindi(config)
         except Exception as e:
             print(f"      ⚠ Hindi generation failed (non-fatal): {e}")
-    elif not ig_publish and config.get("enable_hindi", True):
-        print("      (Hindi skipped — Instagram publishing paused; Hindi is Instagram-only)")
-    elif config.get("enable_hindi", True):
-        print("      (Hindi off — IG_HINDI_ACCESS_TOKEN not set)")
 
     total = len(items)
     print(f"      ✓ {total} scripts ready\n")

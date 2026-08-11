@@ -57,14 +57,14 @@ jobs:
           path: logs/run_log.csv
           retention-days: 30
 
-      # PAUSED: Instagram publishing disabled due to content flag —
-      # do not re-enable until video redesign is complete.
-      # (Also set instagram_publish_enabled: true in config.json when resuming.)
-      # - name: Upload Instagram shorts (for offline / mobile download)
-      #   if: always()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: instagram-shorts-${{ github.run_id }}
-      #     path: instagram/*.mp4
-      #     retention-days: 7
-      #     if-no-files-found: warn
+      # Telugu (astroloz_com) Reels land in instagram/. Hindi (astroloz.hindi)
+      # is paused via config.json (enable_hindi:false) — flagged for content, so
+      # it produces no files. Telugu IG + YouTube are unaffected.
+      - name: Upload Instagram shorts (for offline / mobile download)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instagram-shorts-${{ github.run_id }}
+          path: instagram/*.mp4
+          retention-days: 7
+          if-no-files-found: warn
