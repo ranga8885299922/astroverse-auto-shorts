@@ -18,6 +18,8 @@
   "tone": "warm, motivational, Vedic",
   "use_bphs_grounding": false,
   "use_hook_feedback": false,
+  "use_astroloz_engine": true,
+  "_astroloz_engine_note": "true = compute real transits via the Astroloz backend (GET /api/v1/daily/transit/{rasi}) and let Groq only PHRASE them; Groq stops inventing the astrology. If the endpoint is unreachable the pipeline logs a warning and falls back to Groq-only per rasi (never fails). Override the base URL with env ASTROLOZ_API_URL (default https://api.astroloz.com). Set false to force Groq-only.",
   "instagram_publish_enabled": true,
   "_instagram_note": "GLOBAL Instagram kill-switch. true = Instagram publishing allowed (per-account controls below). false = pause BOTH IG accounts. YouTube is never affected either way.",
   "enable_hindi": false,
