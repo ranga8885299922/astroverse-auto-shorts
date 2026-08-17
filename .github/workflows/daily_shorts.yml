@@ -47,6 +47,10 @@ jobs:
           # Astroloz transit engine base URL (computed gochara grounding).
           # Override via repo variable if the backend URL changes.
           ASTROLOZ_API_URL:     ${{ vars.ASTROLOZ_API_URL || 'https://api.astroloz.com' }}
+          # Groq model. Overridable via repo variable so a Groq deprecation is a
+          # one-line change, not a code edit (llama-3.3-70b-versatile was
+          # decommissioned 2026-08-16). Default is Groq's recommended replacement.
+          GROQ_MODEL:           ${{ vars.GROQ_MODEL || 'openai/gpt-oss-120b' }}
           GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
           SARVAM_API_KEY:       ${{ secrets.SARVAM_API_KEY }}
           # BPHS grounding (Parashara rules DB) — optional, skipped if unset

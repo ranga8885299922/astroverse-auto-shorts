@@ -379,7 +379,7 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
                 messages=[
                     {
                         "role": "system",
@@ -389,6 +389,7 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
                 ],
                 temperature=temperature,
                 max_tokens=3000,
+                response_format={"type": "json_object"},
             )
 
             raw = response.choices[0].message.content.strip()
@@ -615,7 +616,7 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
                 messages=[
                     {"role": "system",
                      "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
@@ -623,6 +624,7 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
                 ],
                 temperature=0.85,
                 max_tokens=3000,
+                response_format={"type": "json_object"},
             )
             raw = response.choices[0].message.content.strip()
             if "```" in raw:
