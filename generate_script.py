@@ -375,22 +375,32 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
 
 {guidance_block}"""
 
+    model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+    messages = [
+        {
+            "role": "system",
+            "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Telugu unicode script. Every prediction must be SPECIFIC with concrete details — specific body parts for health, specific money sources, specific work situations, specific family members, specific deities and days for remedies. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."
+        },
+        {"role": "user", "content": prompt},
+    ]
     last_error = None
-    for attempt in range(3):
+    for attempt in range(4):
         try:
-            response = client.chat.completions.create(
-                model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Telugu unicode script. Every prediction must be SPECIFIC with concrete details — specific body parts for health, specific money sources, specific work situations, specific family members, specific deities and days for remedies. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."
-                    },
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=temperature,
-                max_tokens=3000,
-                response_format={"type": "json_object"},
-            )
+            kwargs = dict(model=model, messages=messages,
+                          temperature=temperature, max_tokens=8000)
+            # gpt-oss is a reasoning model: cap reasoning so it does not eat the
+            # token budget and leave the JSON empty (that returned 400
+            # json_validate_failed). Gated to gpt-oss so a swapped-in model that
+            # rejects the param is unaffected.
+            if "gpt-oss" in model:
+                kwargs["reasoning_effort"] = "low"
+            # Ask for strict JSON first; if the model's JSON is rejected (a known
+            # reasoning-model quirk with Groq's validator), later attempts drop
+            # json mode and rely on the manual extraction below instead of
+            # crashing the whole run.
+            if attempt == 0:
+                kwargs["response_format"] = {"type": "json_object"}
+            response = client.chat.completions.create(**kwargs)
 
             raw = response.choices[0].message.content.strip()
             if "```" in raw:
@@ -451,20 +461,26 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
         except json.JSONDecodeError as e:
             last_error = f"JSON error: {e}"
             print(f"        Attempt {attempt+1} failed: {last_error}")
-            time.sleep(5)
+            time.sleep(4)
         except ValueError as e:
             last_error = str(e)
             print(f"        Attempt {attempt+1} failed: {last_error}")
-            time.sleep(5)
+            time.sleep(4)
         except Exception as e:
-            if "429" in str(e):
+            msg = str(e)
+            if "429" in msg:
                 print(f"        Rate limit, waiting 70s...")
                 time.sleep(70)
-                last_error = str(e)
+                last_error = msg
+            elif "json_validate" in msg or "Failed to validate JSON" in msg or "code: 400" in msg:
+                # Strict-JSON rejection — drop json mode next attempt, parse manually.
+                last_error = msg
+                print(f"        Attempt {attempt+1}: strict-JSON rejected, retrying in plain mode")
+                time.sleep(3)
             else:
                 raise
 
-    raise RuntimeError(f"Failed after 3 attempts for {sign}. Last: {last_error}")
+    raise RuntimeError(f"Failed after 4 attempts for {sign}. Last: {last_error}")
 
 
 def generate_scripts(config: dict, grounding: dict | None = None,
@@ -612,20 +628,22 @@ Every prediction must be SPECIFIC and ORIGINAL to {rasi_hi} today. The notes bel
 - LOVE/FAMILY: a specific person/event (spouse, child's news, a parent, an old friend, a proposal) — vary it.
 Make it feel personally written by a real astrologer reading THIS rasi's chart, not a template."""
 
+    model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+    messages = [
+        {"role": "system",
+         "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
+        {"role": "user", "content": prompt},
+    ]
     last_error = None
-    for attempt in range(3):
+    for attempt in range(4):
         try:
-            response = client.chat.completions.create(
-                model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
-                messages=[
-                    {"role": "system",
-                     "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.85,
-                max_tokens=3000,
-                response_format={"type": "json_object"},
-            )
+            kwargs = dict(model=model, messages=messages,
+                          temperature=0.85, max_tokens=8000)
+            if "gpt-oss" in model:
+                kwargs["reasoning_effort"] = "low"
+            if attempt == 0:
+                kwargs["response_format"] = {"type": "json_object"}
+            response = client.chat.completions.create(**kwargs)
             raw = response.choices[0].message.content.strip()
             if "```" in raw:
                 for part in raw.split("```"):
@@ -674,15 +692,20 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
             }]
 
         except json.JSONDecodeError as e:
-            last_error = f"JSON error: {e}"; time.sleep(5)
+            last_error = f"JSON error: {e}"; time.sleep(4)
         except ValueError as e:
-            last_error = str(e); time.sleep(5)
+            last_error = str(e); time.sleep(4)
         except Exception as e:
-            if "429" in str(e):
-                time.sleep(70); last_error = str(e)
+            msg = str(e)
+            if "429" in msg:
+                time.sleep(70); last_error = msg
+            elif "json_validate" in msg or "Failed to validate JSON" in msg or "code: 400" in msg:
+                last_error = msg
+                print(f"        Attempt {attempt+1}: strict-JSON rejected, retrying in plain mode")
+                time.sleep(3)
             else:
                 raise
-    raise RuntimeError(f"Hindi failed after 3 attempts for {sign}. Last: {last_error}")
+    raise RuntimeError(f"Hindi failed after 4 attempts for {sign}. Last: {last_error}")
 
 
 def generate_scripts_hindi(config: dict) -> list[dict]:
