@@ -447,6 +447,12 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
             )
 
             obj["rasi_telugu"] = obj.get("rasi_telugu", rasi_telugu)
+            # Pin language to the canonical values — the model occasionally
+            # localises this field ("తెలుగు"), which then lands in the Instagram
+            # storage object key and Supabase rejects it (400). The slug for
+            # every downstream file is sign + language, so it must stay ASCII.
+            obj["language"]      = lang["name"]
+            obj["language_code"] = lang["code"]
 
             # Hook line as YouTube title (thumbnail text = title = one message)
             obj["title_yt"] = build_title(
