@@ -24,13 +24,29 @@ CTA_SPOKEN = (
 
 
 def build_title(highlight: str, rasi: str, date_short: str) -> str:
-    prefix = f"{rasi}: "
     suffix = f" | {date_short}"
     hl     = " ".join(highlight.split())          # collapse newlines/spaces
+    # The hook now usually opens by addressing the rasi (add_rasi_address), so
+    # only prefix "{rasi}: " when the rasi is NOT already in the hook — never
+    # "మేష రాశి: మేష రాశి వారికి ...".
+    prefix = "" if rasi.split()[0] in hl else f"{rasi}: "
     max_hl = 100 - len(prefix) - len(suffix)
     if len(hl) > max_hl:
         hl = hl[:max_hl - 1].rstrip() + "…"
     return prefix + hl + suffix
+
+
+def add_rasi_address(highlight: str, rasi_telugu: str) -> str:
+    """Open the hook by addressing the rasi's viewers — 'మేష రాశి వారికి …'.
+    Skipped when the hook already names the rasi, so it never doubles up
+    ('మేష రాశి వారికి మేష రాశి …')."""
+    hl = (highlight or "").strip()
+    if not hl:
+        return hl
+    core = rasi_telugu.split()[0]                  # distinctive word, e.g. 'మేష'
+    if core in hl:                                 # already names this rasi
+        return hl
+    return f"{rasi_telugu} వారికి {hl}"
 
 RASI_TELUGU = {
     "Aries":"మేష రాశి","Taurus":"వృషభ రాశి","Gemini":"మిథున రాశి",
@@ -428,6 +444,9 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
             # wrong day; fix any day name in "today" sentences to the real one.
             obj["script_telugu"]    = fix_weekday(obj["script_telugu"], weekday_te)
             obj["highlight_telugu"] = fix_weekday(obj["highlight_telugu"], weekday_te)
+            # Address the rasi's viewers in the hook ("మేష రాశి వారికి …"), unless
+            # it already names the rasi (no duplicate).
+            obj["highlight_telugu"] = add_rasi_address(obj["highlight_telugu"], rasi_telugu)
             # Normalise sentence punctuation so the audio breathes (see fix_punctuation).
             obj["script_telugu"]    = fix_punctuation(obj["script_telugu"])
 
