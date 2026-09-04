@@ -33,6 +33,12 @@ jobs:
       - name: Install Python packages
         run: pip install -r requirements.txt
 
+      # Chromium for record_scene.py (the deity+emblem scene recorder). --with-deps
+      # pulls the system libraries Chromium needs. Skipped-cost is small; if this
+      # step or the recorder ever fails, main.py falls back to the MoviePy render.
+      - name: Install Playwright Chromium
+        run: python -m playwright install --with-deps chromium
+
       - name: Restore credentials
         run: |
           mkdir -p credentials

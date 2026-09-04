@@ -192,9 +192,21 @@ def main():
             print(f"        → gTTS audio...")
             audio_path = synthesize(item, OUT_DIR)
 
-            # 3. Build video
-            print(f"        → MoviePy render...")
-            video_path = build_video(item, audio_path, config, OUT_DIR)
+            # 3. Build video — recorded deity+emblem scene when use_scene_video
+            # is on; MoviePy caption render otherwise. Scene failures fall back
+            # to MoviePy so a run never dies on the recorder.
+            if config.get("use_scene_video", False):
+                try:
+                    from record_scene import build_scene_video
+                    print(f"        → recording deity scene...")
+                    video_path = build_scene_video(item, audio_path, config, OUT_DIR)
+                except Exception as e:
+                    print(f"        ⚠ scene record failed ({e}) — MoviePy fallback")
+                    traceback.print_exc()
+                    video_path = build_video(item, audio_path, config, OUT_DIR)
+            else:
+                print(f"        → MoviePy render...")
+                video_path = build_video(item, audio_path, config, OUT_DIR)
 
             is_hindi = item.get("lang") == "hi"
 

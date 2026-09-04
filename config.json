@@ -18,6 +18,8 @@
   "tone": "warm, motivational, Vedic",
   "use_bphs_grounding": false,
   "use_hook_feedback": false,
+  "use_scene_video": true,
+  "_scene_video_note": "true = the uploaded video is the recorded deity + rasi-emblem scene (record_scene.py: Playwright records scene/daily-scene.html at 1080x1920 for the voice-over length, ffmpeg muxes the gTTS audio). Deity/theme by IST-tomorrow weekday, emblem by sign, no on-screen text — title/date come from the YouTube/IG metadata (title_yt) and the day is announced in the voice-over. false = old MoviePy caption render (build_video.py). Any recorder error falls back to MoviePy automatically, so a run never fails on this. CI installs Chromium via 'playwright install' in the workflow.",
   "use_astroloz_engine": true,
   "_astroloz_engine_note": "true = compute real transits via the Astroloz backend (GET /api/v1/daily/transit/{rasi}) and let Groq only PHRASE them; Groq stops inventing the astrology. If the endpoint is unreachable the pipeline logs a warning and falls back to Groq-only per rasi (never fails). Override the base URL with env ASTROLOZ_API_URL (default https://api.astroloz.com). Set false to force Groq-only.",
   "instagram_publish_enabled": true,
