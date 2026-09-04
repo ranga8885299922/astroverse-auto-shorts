@@ -17,23 +17,14 @@ CTA_SPOKEN = (
     " నేను website link reply ఇస్తాను."
 )
 
-# ── YouTube title — "{rasi}: {hook} | {date}" (edit here) ────────────────────
-# Rasi name FIRST so viewers instantly see whose prediction it is, then this
-# video's own hook. rasi_telugu already contains "రాశి" so the search keyword
-# is naturally present. Capped at 100 chars; the hook is truncated first.
+# ── YouTube title — "{rasi_telugu} ({date})" (edit here) ─────────────────────
+# The recording scene shows NO on-screen text, so the title carries the sign:
+# the Telugu rasi name (which already contains "రాశి", a natural search keyword)
+# with the date in parentheses.
 
 
-def build_title(highlight: str, rasi: str, date_short: str) -> str:
-    suffix = f" | {date_short}"
-    hl     = " ".join(highlight.split())          # collapse newlines/spaces
-    # The hook now usually opens by addressing the rasi (add_rasi_address), so
-    # only prefix "{rasi}: " when the rasi is NOT already in the hook — never
-    # "మేష రాశి: మేష రాశి వారికి ...".
-    prefix = "" if rasi.split()[0] in hl else f"{rasi}: "
-    max_hl = 100 - len(prefix) - len(suffix)
-    if len(hl) > max_hl:
-        hl = hl[:max_hl - 1].rstrip() + "…"
-    return prefix + hl + suffix
+def build_title(rasi: str, date_short: str) -> str:
+    return f"{rasi} ({date_short})"
 
 
 def add_rasi_address(highlight: str, rasi_telugu: str) -> str:
@@ -461,8 +452,11 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
                   boundaries[0] if boundaries else len(raw))
             head = raw[:cut].strip()
             tail = raw[cut:].strip()
+            # Spoken opener names the rasi + "today" so listeners immediately
+            # know the sign (the recording scene shows no on-screen text).
+            announce = f"{rasi_telugu} వారికి ఈ రోజు రాశిఫలాలు."
             obj["script"] = fix_punctuation(
-                head + " " + CTA_SPOKEN + (" " + tail if tail else "")
+                announce + " " + head + " " + CTA_SPOKEN + (" " + tail if tail else "")
             )
 
             obj["rasi_telugu"] = obj.get("rasi_telugu", rasi_telugu)
@@ -473,10 +467,8 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
             obj["language"]      = lang["name"]
             obj["language_code"] = lang["code"]
 
-            # Hook line as YouTube title (thumbnail text = title = one message)
-            obj["title_yt"] = build_title(
-                obj["highlight_telugu"], obj["rasi_telugu"], date_short
-            )
+            # Title = Telugu rasi name + date in parentheses (scene has no text)
+            obj["title_yt"] = build_title(obj["rasi_telugu"], date_short)
 
             # Metadata for the performance feedback loop
             obj["planet"] = grounding["planet"] if grounding else None
@@ -697,8 +689,10 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
                   boundaries[0] if boundaries else len(script_hi))
             head = script_hi[:cut].strip()
             tail = script_hi[cut:].strip()
+            # Spoken opener names the rasi + "today" (scene shows no text).
+            announce_hi = f"{rasi_hi} वालों के लिए आज का राशिफल."
             audio_script = fix_punctuation(
-                head + " " + CTA_SPOKEN_HI + (" " + tail if tail else ""))
+                announce_hi + " " + head + " " + CTA_SPOKEN_HI + (" " + tail if tail else ""))
 
             # Reuse the *_telugu key names so downstream code is unchanged;
             # they hold Hindi text and item["lang"]="hi" marks the language.
@@ -711,7 +705,7 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
                 "highlight_telugu": highlight_hi, # holds Hindi hook
                 "script_telugu":  script_hi,      # holds Hindi display script
                 "script":         audio_script,   # Hindi audio (hook→CTA→rest)
-                "title_yt":       build_title(highlight_hi, rasi_hi, date_short),
+                "title_yt":       build_title(rasi_hi, date_short),
                 "planet":         None,
                 "theme":          theme,
             }]
