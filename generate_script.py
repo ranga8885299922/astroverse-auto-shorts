@@ -112,6 +112,28 @@ TELUGU_WEEKDAY = {
     4: "శుక్రవారం", 5: "శనివారం", 6: "ఆదివారం",
 }
 
+# Deity of each weekday — MUST match the recording scene's DAY_THEME image so the
+# spoken greeting names the god actually shown on screen. Genitive form, so it
+# reads "<deity> anugraham/aashirwaad" cleanly. Monday=0 … Sunday=6.
+DEITY_TELUGU = {
+    0: "శివుని",             # Monday    — Shiva
+    1: "ఆంజనేయ స్వామి",       # Tuesday   — Hanuman
+    2: "వినాయకుని",           # Wednesday — Ganesha
+    3: "శ్రీ మహా విష్ణువు",    # Thursday  — Vishnu
+    4: "లక్ష్మీ దేవి",         # Friday    — Lakshmi
+    5: "వెంకటేశ్వర స్వామి",     # Saturday  — Venkateswara
+    6: "శ్రీ కృష్ణుని",         # Sunday    — Krishna
+}
+DEITY_HINDI = {
+    0: "भगवान शिव",          # Monday    — Shiva
+    1: "हनुमान जी",           # Tuesday   — Hanuman
+    2: "गणेश जी",             # Wednesday — Ganesha
+    3: "भगवान विष्णु",        # Thursday  — Vishnu
+    4: "माँ लक्ष्मी",          # Friday    — Lakshmi
+    5: "भगवान वेंकटेश्वर",      # Saturday  — Venkateswara
+    6: "भगवान कृष्ण",         # Sunday    — Krishna
+}
+
 # Words that mean "today" — a weekday name in the same sentence as one of
 # these MUST be the actual day. (Day names elsewhere, e.g. remedies like
 # "శుక్రవారం లక్ష్మీ పూజ", are legitimate and left untouched.)
@@ -452,11 +474,15 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
                   boundaries[0] if boundaries else len(raw))
             head = raw[:cut].strip()
             tail = raw[cut:].strip()
-            # Spoken opener names the rasi + "today" so listeners immediately
-            # know the sign (the recording scene shows no on-screen text).
-            announce = f"{rasi_telugu} వారికి ఈ రోజు రాశిఫలాలు."
+            # Spoken opener: a day-specific deity greeting that names the rasi and
+            # asks viewers to watch the whole video (a retention hook). Weekday and
+            # deity are TOMORROW's — the run targets tomorrow — so they match the
+            # scene's deity image and the title's date.
+            deity_te = DEITY_TELUGU[_ist_tomorrow().weekday()]
+            greeting = (f"ఈ రోజు {weekday_te} కావున {deity_te} అనుగ్రహం పొందడానికి "
+                        f"{rasi_telugu} వారందరూ ఈ వీడియో ని పూర్తిగా చూడండి.")
             obj["script"] = fix_punctuation(
-                announce + " " + head + " " + CTA_SPOKEN + (" " + tail if tail else "")
+                greeting + " " + head + " " + CTA_SPOKEN + (" " + tail if tail else "")
             )
 
             obj["rasi_telugu"] = obj.get("rasi_telugu", rasi_telugu)
@@ -689,10 +715,13 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
                   boundaries[0] if boundaries else len(script_hi))
             head = script_hi[:cut].strip()
             tail = script_hi[cut:].strip()
-            # Spoken opener names the rasi + "today" (scene shows no text).
-            announce_hi = f"{rasi_hi} वालों के लिए आज का राशिफल."
+            # Spoken opener: day-specific deity greeting (same idea as Telugu).
+            # Weekday + deity are TOMORROW's, matching the scene deity and title.
+            deity_hi = DEITY_HINDI[tomorrow.weekday()]
+            greeting_hi = (f"आज {weekday_hi} है, इसलिए {deity_hi} का आशीर्वाद पाने के लिए "
+                           f"{rasi_hi} वाले यह वीडियो पूरा देखें।")
             audio_script = fix_punctuation(
-                announce_hi + " " + head + " " + CTA_SPOKEN_HI + (" " + tail if tail else ""))
+                greeting_hi + " " + head + " " + CTA_SPOKEN_HI + (" " + tail if tail else ""))
 
             # Reuse the *_telugu key names so downstream code is unchanged;
             # they hold Hindi text and item["lang"]="hi" marks the language.
