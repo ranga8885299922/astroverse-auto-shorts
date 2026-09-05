@@ -160,13 +160,19 @@ def build_scene_video(item, audio_path, config, out_dir) -> str:
     ff = _ffmpeg_exe()
     # Video from the silent recording, audio from gTTS. -shortest ends the clip
     # when the audio ends (the recording is deliberately ~1.5s longer).
+    # The scene is nearly static (slow float + star drift), so a higher CRF with
+    # a bitrate cap keeps it crisp while cutting the file from ~10-12MB to ~3-4MB
+    # — small enough to upload to Supabase Storage reliably (the two largest CRF-20
+    # clips 400'd on the size limit) and for Instagram to build the Reel cover fast.
     cmd = [
         ff, "-y",
         "-i", webm,
         "-i", audio_path,
         "-map", "0:v:0", "-map", "1:a:0",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-r", "30",
-        "-c:a", "aac", "-b:a", "160k",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p",
+        "-crf", "27", "-maxrate", "2000k", "-bufsize", "4000k",
+        "-r", "30", "-preset", "medium",
+        "-c:a", "aac", "-b:a", "96k",
         "-movflags", "+faststart", "-shortest",
         out,
     ]
