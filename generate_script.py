@@ -404,7 +404,7 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
 
 {guidance_block}"""
 
-    model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+    model = os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
     messages = [
         {
             "role": "system",
@@ -671,7 +671,7 @@ Every prediction must be SPECIFIC and ORIGINAL to {rasi_hi} today. The notes bel
 - LOVE/FAMILY: a specific person/event (spouse, child's news, a parent, an old friend, a proposal) — vary it.
 Make it feel personally written by a real astrologer reading THIS rasi's chart, not a template."""
 
-    model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+    model = os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
     messages = [
         {"role": "system",
          "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
