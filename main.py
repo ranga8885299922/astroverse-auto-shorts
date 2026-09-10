@@ -73,6 +73,20 @@ def main():
     # Load config
     config = json.loads(pathlib.Path("config.json").read_text(encoding="utf-8"))
 
+    # Keep Supabase app_secrets in sync with the live IG tokens so the 10-min
+    # reply-comments Edge Function always replies with a valid token (it reads
+    # the token from app_secrets, not the GitHub secret). Runs every pipeline run.
+    from post_instagram import sync_tokens_to_supabase
+    print("\n  🔑 Syncing IG tokens → Supabase app_secrets (for comment replies)...")
+    sync_tokens_to_supabase()
+
+    # Sync-only mode: a manual run that ONLY refreshes app_secrets and exits —
+    # fixes IG replies immediately after a token rotation, without regenerating
+    # or re-posting today's videos.
+    if os.environ.get("SYNC_SECRETS_ONLY", "").strip().lower() == "true":
+        print("  SYNC_SECRETS_ONLY set — app_secrets refreshed, exiting without a run.")
+        return
+
     # Optional: auto-rotate theme by weekday
     use_rotation = os.environ.get("USE_THEME_ROTATION", "true").lower() == "true"
     if use_rotation:

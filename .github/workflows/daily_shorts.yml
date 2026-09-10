@@ -7,6 +7,10 @@ on:
         description: "Upload to YouTube (true/false). Set false for an Instagram-only run."
         required: false
         default: "true"
+      sync_secrets_only:
+        description: "Only sync IG tokens → Supabase app_secrets (fixes replies), then exit. No videos generated/posted."
+        required: false
+        default: "false"
 
 jobs:
   run-shorts:
@@ -50,6 +54,9 @@ jobs:
           # Instagram-only manual runs pass youtube_enabled=false. Scheduled/API
           # triggers omit it → defaults to true (YouTube uploads as normal).
           YOUTUBE_PUBLISH_ENABLED: ${{ github.event.inputs.youtube_enabled || 'true' }}
+          # Token-sync-only manual run (fixes IG comment replies after a token
+          # rotation without generating or re-posting). Scheduled runs omit it.
+          SYNC_SECRETS_ONLY: ${{ github.event.inputs.sync_secrets_only || 'false' }}
           # Astroloz transit engine base URL (computed gochara grounding).
           # Override via repo variable if the backend URL changes.
           ASTROLOZ_API_URL:     ${{ vars.ASTROLOZ_API_URL || 'https://api.astroloz.com' }}

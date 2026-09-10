@@ -79,6 +79,39 @@ def instagram_enabled() -> bool:
                 and os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_KEY"))
 
 
+def sync_tokens_to_supabase() -> None:
+    """Mirror the current IG tokens into Supabase app_secrets so the 10-min
+    reply-comments Edge Function always replies with a LIVE token — it reads the
+    token from app_secrets, not from the GitHub secret, so a token rotation that
+    only updates the GitHub secret silently breaks replies until this re-syncs.
+    Best-effort; never fatal. Runs in CI where SUPABASE_SERVICE_KEY is current."""
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    if not (url and key):
+        print("      (token sync skipped — Supabase env not set)")
+        return
+    for skey, val in (("ig_access_token",       os.environ.get("IG_ACCESS_TOKEN")),
+                      ("ig_hindi_access_token", os.environ.get("IG_HINDI_ACCESS_TOKEN"))):
+        if not val:
+            continue
+        try:
+            r = requests.post(
+                f"{url}/rest/v1/app_secrets",
+                headers={"apikey": key, "Authorization": f"Bearer {key}",
+                         "Content-Type": "application/json",
+                         "Prefer": "resolution=merge-duplicates"},
+                params={"on_conflict": "key"},
+                json={"key": skey, "value": val},
+                timeout=20,
+            )
+            if r.status_code in (200, 201, 204):
+                print(f"      ✓ synced {skey} → app_secrets")
+            else:
+                print(f"      ⚠ {skey} sync HTTP {r.status_code}: {r.text[:120]}")
+        except Exception as e:
+            print(f"      ⚠ {skey} sync failed (non-fatal): {e}")
+
+
 def _storage_upload(video_path: str) -> tuple[str, str]:
     """Upload to Supabase Storage; returns (object_name, public_url)."""
     url = os.environ["SUPABASE_URL"].rstrip("/")
