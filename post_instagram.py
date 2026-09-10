@@ -155,6 +155,11 @@ def _publish_once(item: dict, video_path: str, token: str) -> str | None:
                     "video_url":  public_url,
                     "caption":    caption,
                     "share_to_feed": "true",
+                    # Pin the Reel cover 1s in. The recorded video now starts on
+                    # the rendered scene (record_scene trims the blank lead-in),
+                    # but this guarantees a non-blank cover even if the first
+                    # frame ever slips — the scene is static so 1s looks identical.
+                    "thumb_offset": "1000",
                     "access_token": token},
             timeout=60,
         )

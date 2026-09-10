@@ -23,6 +23,7 @@ emblem is keyed to the sign.
 
 import os
 import re
+import time
 import glob
 import pathlib
 import datetime
@@ -115,9 +116,10 @@ def build_scene_video(item, audio_path, config, out_dir) -> str:
     day = _scene_day()
     title = _scene_title(item)
     dur = _audio_duration(audio_path)
-    # Record longer than the voice-over so the muxed clip never ends short; the
-    # ffmpeg -shortest below trims the tail back to the audio length.
-    rec_ms = int(dur * 1000) + 1500
+    # Record longer than the voice-over: the ffmpeg step trims the blank lead-in
+    # (below) AND -shortest trims the tail, so leave headroom for both.
+    rec_ms = int(dur * 1000) + 2500
+    lead_secs = 1.5   # blank lead-in before the scene paints (measured below)
 
     slug = f'{item["sign"]}_{item["language"]}'.replace(" ", "_").lower()
     rec_dir = pathlib.Path(out_dir) / "_scene_rec"
@@ -134,6 +136,7 @@ def build_scene_video(item, audio_path, config, out_dir) -> str:
                f"?sign={sign}&day={day}&title={quote(title)}")
         with sync_playwright() as p:
             browser = p.chromium.launch(args=["--force-color-profile=srgb"])
+            t_rec_start = time.monotonic()   # recording starts at context creation
             ctx = browser.new_context(
                 viewport={"width": W, "height": H},
                 device_scale_factor=1,
@@ -146,6 +149,9 @@ def build_scene_video(item, audio_path, config, out_dir) -> str:
                 page.wait_for_function("window.__sceneReady === true", timeout=8000)
             except Exception:
                 pass  # hard cap in the page sets it after 4s regardless
+            # How long the webm opens on the blank pre-paint page — trimmed off
+            # below so frame 0 (and the Instagram Reel cover) is the real scene.
+            lead_secs = time.monotonic() - t_rec_start
             page.wait_for_timeout(rec_ms)
             ctx.close()        # finalises the .webm
             browser.close()
@@ -158,21 +164,26 @@ def build_scene_video(item, audio_path, config, out_dir) -> str:
 
     out = str(pathlib.Path(out_dir) / f"{slug}.mp4")
     ff = _ffmpeg_exe()
-    # Video from the silent recording, audio from gTTS. -shortest ends the clip
-    # when the audio ends (the recording is deliberately ~1.5s longer).
-    # The scene is nearly static (slow float + star drift), so a higher CRF with
-    # a bitrate cap keeps it crisp while cutting the file from ~10-12MB to ~3-4MB
-    # — small enough to upload to Supabase Storage reliably (the two largest CRF-20
-    # clips 400'd on the size limit) and for Instagram to build the Reel cover fast.
+    # Two fixes here:
+    #  1. THUMBNAIL: Playwright records from context creation, so the webm opens
+    #     on the browser's blank white pre-paint frame — which Instagram was using
+    #     as the Reel cover ("no thumbnail"). "-ss trim" on the VIDEO input drops
+    #     that lead-in so frame 0 is the rendered scene. The +2.5s record headroom
+    #     guarantees the trimmed clip still covers the whole voice-over; -shortest
+    #     ends it at the audio.
+    #  2. SIZE: the scene is nearly static (slow float + star drift), so a high CRF
+    #     + low fps + a tight bitrate cap crush the file to ~1.5-2.5MB with no
+    #     visible loss on the deity image. gTTS speech mono @48k is plenty.
+    trim = f"{max(lead_secs, 0.0) + 0.5:.2f}"
     cmd = [
         ff, "-y",
-        "-i", webm,
+        "-ss", trim, "-i", webm,       # drop the blank lead-in from the video
         "-i", audio_path,
         "-map", "0:v:0", "-map", "1:a:0",
         "-c:v", "libx264", "-pix_fmt", "yuv420p",
-        "-crf", "27", "-maxrate", "2000k", "-bufsize", "4000k",
-        "-r", "30", "-preset", "medium",
-        "-c:a", "aac", "-b:a", "96k",
+        "-crf", "34", "-maxrate", "1000k", "-bufsize", "2000k",
+        "-r", "24", "-preset", "slow",
+        "-c:a", "aac", "-b:a", "48k", "-ac", "1",
         "-movflags", "+faststart", "-shortest",
         out,
     ]
