@@ -296,6 +296,37 @@ def _build_transit_block(t: dict) -> str:
     return "\n".join(lines)
 
 
+# ── LLM provider ─────────────────────────────────────────────────────────────
+# Groq by default; Gemini when a Gemini key is present. Gemini is reached via its
+# OpenAI-compatible endpoint so the Groq-style .chat.completions.create calls
+# below need no change. Provider is picked by LLM_PROVIDER (gemini/groq) or,
+# unset, by whether GEMINI_API_KEY/GOOGLE_API_KEY is set — so simply adding the
+# secret switches the pipeline to Gemini, and removing it falls back to Groq.
+def _use_gemini() -> bool:
+    p = os.environ.get("LLM_PROVIDER", "").strip().lower()
+    if p == "gemini":
+        return True
+    if p == "groq":
+        return False
+    return bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+
+
+def _llm_model() -> str:
+    if _use_gemini():
+        return os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    return os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
+
+
+def _llm_client():
+    if _use_gemini():
+        from openai import OpenAI
+        return OpenAI(
+            api_key=os.environ.get("GEMINI_API_KEY") or os.environ["GOOGLE_API_KEY"],
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        )
+    return Groq(api_key=os.environ["GROQ_API_KEY"])
+
+
 def _call_groq(client, sign, languages, theme, tone, grounding=None,
                top_hooks=None, transit=None) -> list[dict]:
     today, date_short, weekday_te = _get_ist_dates()
@@ -382,7 +413,7 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
 
 {guidance_block}"""
 
-    model = os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
+    model = _llm_model()
     messages = [
         {
             "role": "system",
@@ -502,7 +533,7 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
 
 def generate_scripts(config: dict, grounding: dict | None = None,
                      top_hooks: list[str] | None = None) -> list[dict]:
-    client       = Groq(api_key=os.environ["GROQ_API_KEY"])
+    client       = _llm_client()
     signs        = config["signs"]
     languages    = config["languages"]
     theme        = config["daily_theme"]
@@ -645,7 +676,7 @@ Every prediction must be SPECIFIC and ORIGINAL to {rasi_hi} today. The notes bel
 - LOVE/FAMILY: a specific person/event (spouse, child's news, a parent, an old friend, a proposal) — vary it.
 Make it feel personally written by a real astrologer reading THIS rasi's chart, not a template."""
 
-    model = os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
+    model = _llm_model()
     messages = [
         {"role": "system",
          "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
@@ -728,7 +759,7 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
 
 
 def generate_scripts_hindi(config: dict) -> list[dict]:
-    client = Groq(api_key=os.environ["GROQ_API_KEY"])
+    client = _llm_client()
     signs  = config["signs"]
     theme  = config["daily_theme"]
     tone   = config["tone"]
