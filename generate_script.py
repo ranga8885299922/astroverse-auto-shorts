@@ -350,13 +350,14 @@ def _call_groq(client, sign, languages, theme, tone, grounding=None,
     engine_block = _build_transit_block(transit)
     if transit:
         script_directive = (
-            f"250 word horoscope in pure Telugu script. FIRST SENTENCE = a shocking "
+            f"110 word horoscope in pure Telugu script (short video — keep it tight). "
+            f"FIRST SENTENCE = a shocking "
             f"curiosity hook about today's main focus ({focus}) for this rasi (viewers "
             f"decide to stay in 3 seconds) — NEVER start with a greeting like నమస్కారం "
             f"or 'ఈరోజు మీకు'. Then cover IN ORDER, phrasing ONLY the COMPUTED TRANSITS "
-            f"above: {lord} position and its influence, career, money, love/family, "
-            f"health, the ONE risk/caution given above, then the remedy EXACTLY as "
-            f"specified below, then a one-line closing blessing."
+            f"above, ONE crisp sentence each: {lord} position and its influence, career, "
+            f"money, love/family, health, the ONE risk/caution given above, then the "
+            f"remedy EXACTLY as specified below, then a one-line closing blessing."
         )
         guidance_block = (
             "GROUNDING RULE (most important): every astrological statement MUST trace to "
@@ -369,12 +370,14 @@ def _call_groq(client, sign, languages, theme, tone, grounding=None,
         temperature = 0.6
     else:
         script_directive = (
-            f"250 word horoscope in pure Telugu script. FIRST SENTENCE = a shocking "
+            f"110 word horoscope in pure Telugu script (short video — keep it tight). "
+            f"FIRST SENTENCE = a shocking "
             f"curiosity hook about today's main focus ({focus}) for this rasi (viewers "
             f"decide to stay in 3 seconds) — NEVER start with a greeting like నమస్కారం "
-            f"or 'ఈరోజు మీకు'. Then cover in order: {lord} position and influence, "
-            f"career, money, love/family, health, 1 risk warning, then the remedy "
-            f"EXACTLY as specified below, then a one-line closing blessing."
+            f"or 'ఈరోజు మీకు'. Then cover in order, ONE crisp sentence each: {lord} "
+            f"position and influence, career, money, love/family, health, 1 risk "
+            f"warning, then the remedy EXACTLY as specified below, then a one-line "
+            f"closing blessing."
         )
         guidance_block = f"""SPECIFICITY & ANTI-REPETITION (most important rule):
 Every prediction must be SPECIFIC and ORIGINAL to {rasi_telugu} today. The notes below describe the STYLE in English — they are NOT text to translate or reuse. Write your OWN fresh Telugu sentences. Two different rasis must NEVER share the same health issue, the same money event, or the same love event on the same day — invent different concrete details each time.
@@ -664,7 +667,7 @@ Return ONLY this JSON object. Start with {{ end with }}. No text outside:
   "sign": "{sign}",
   "rasi_hindi": "{rasi_hi}",
   "highlight_hindi": "The single most distinctive prediction FROM script_hindi, rewritten as a dramatic hook in pure Hindi (Devanagari) — this is THIS video's THUMBNAIL AND TITLE, about today's focus ({focus}), and could not apply to any other rasi. COMPLETE sentence of 5 to 8 words. Present tense. NO hedging words.",
-  "script_hindi": "250 word horoscope in pure Hindi (Devanagari script). FIRST SENTENCE = a shocking curiosity hook about today's focus ({focus}) — NEVER start with a greeting like नमस्ते. Then cover in order: {lord} position and influence, career (करियर), money (धन), love/family (प्रेम/परिवार), health (स्वास्थ्य), 1 risk warning, then the remedy EXACTLY as specified below, then a one-line closing blessing.",
+  "script_hindi": "110 word horoscope in pure Hindi (Devanagari script) — short video, keep it tight. FIRST SENTENCE = a shocking curiosity hook about today's focus ({focus}) — NEVER start with a greeting like नमस्ते. Then cover in order, ONE crisp sentence each: {lord} position and influence, career (करियर), money (धन), love/family (प्रेम/परिवार), health (स्वास्थ्य), 1 risk warning, then the remedy EXACTLY as specified below, then a one-line closing blessing.",
   "title_en": "{sign} - {date_short} | Hindi Daily Horoscope"
 }}
 
