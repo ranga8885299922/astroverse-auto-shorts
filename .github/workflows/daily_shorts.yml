@@ -11,6 +11,10 @@ on:
         description: "Only sync IG tokens → Supabase app_secrets (fixes replies), then exit. No videos generated/posted."
         required: false
         default: "false"
+      verify_only:
+        description: "Only verify the LLM provider/model generates cleanly (prints model + sample), then exit. No videos generated/posted."
+        required: false
+        default: "false"
 
 jobs:
   run-shorts:
@@ -57,6 +61,8 @@ jobs:
           # Token-sync-only manual run (fixes IG comment replies after a token
           # rotation without generating or re-posting). Scheduled runs omit it.
           SYNC_SECRETS_ONLY: ${{ github.event.inputs.sync_secrets_only || 'false' }}
+          # LLM verify-only manual run (checks the Gemini/Groq switch), no posting.
+          VERIFY_LLM: ${{ github.event.inputs.verify_only || 'false' }}
           # Astroloz transit engine base URL (computed gochara grounding).
           # Override via repo variable if the backend URL changes.
           ASTROLOZ_API_URL:     ${{ vars.ASTROLOZ_API_URL || 'https://api.astroloz.com' }}

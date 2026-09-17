@@ -87,6 +87,25 @@ def main():
         print("  SYNC_SECRETS_ONLY set — app_secrets refreshed, exiting without a run.")
         return
 
+    # Verify-only mode: confirm which LLM provider/model is active and that it
+    # generates cleanly in CI (e.g. after adding the GEMINI_API_KEY secret), then
+    # exit without rendering or posting anything.
+    if os.environ.get("VERIFY_LLM", "").strip().lower() == "true":
+        from generate_script import _llm_model, _use_gemini
+        from tts_audio import synthesize, _duration, _bundled_ffmpeg
+        print(f"\n  [VERIFY] provider: {'GEMINI' if _use_gemini() else 'GROQ'} | model: {_llm_model()}")
+        vcfg = dict(config); vcfg["signs"] = ["Aries", "Leo"]
+        vitems = generate_scripts(vcfg, None, None)
+        ff = _bundled_ffmpeg()
+        pathlib.Path("output").mkdir(exist_ok=True)
+        for o in vitems:
+            ap = synthesize(o, "output")
+            d = _duration(ff, ap) if ff else -1.0
+            print(f"  [VERIFY] {o['sign']}: words={len(o['script'].split())} dur={d:.1f}s under90={d < 90}")
+            print(f"  [VERIFY] sample: {o['script'][:90]}")
+        print("  [VERIFY] OK — model generates cleanly. Exiting without posting.")
+        return
+
     # Optional: auto-rotate theme by weekday
     use_rotation = os.environ.get("USE_THEME_ROTATION", "true").lower() == "true"
     if use_rotation:
