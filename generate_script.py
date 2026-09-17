@@ -432,6 +432,10 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
             # rejects the param is unaffected.
             if "gpt-oss" in model:
                 kwargs["reasoning_effort"] = "low"
+            elif "gemini" in model:
+                # Gemini 2.5 Flash "thinks" by default (~3-4x slower, more tokens)
+                # with no quality gain here — the transit facts are already given.
+                kwargs["reasoning_effort"] = os.environ.get("GEMINI_REASONING_EFFORT", "none")
             # Ask for strict JSON first; if the model's JSON is rejected (a known
             # reasoning-model quirk with Groq's validator), later attempts drop
             # json mode and rely on the manual extraction below instead of
@@ -689,6 +693,10 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
                           temperature=0.85, max_tokens=8000)
             if "gpt-oss" in model:
                 kwargs["reasoning_effort"] = "low"
+            elif "gemini" in model:
+                # Gemini 2.5 Flash "thinks" by default (~3-4x slower, more tokens)
+                # with no quality gain here — the transit facts are already given.
+                kwargs["reasoning_effort"] = os.environ.get("GEMINI_REASONING_EFFORT", "none")
             if attempt == 0:
                 kwargs["response_format"] = {"type": "json_object"}
             response = client.chat.completions.create(**kwargs)
