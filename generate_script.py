@@ -14,7 +14,7 @@ from groq import Groq
 CTA_SPOKEN = (
     "మీ వ్యక్తిగత జాతకం గురించి ప్రశ్నలకు పూర్తి ఉచిత సమాధానాల కోసం "
     "link అని comment చేయండి."
-    " నేను website link reply ఇస్తాను."
+    " నేను website link ఇస్తాను."
 )
 
 # ── YouTube title — "{rasi_telugu} ({date})" (edit here) ─────────────────────
@@ -588,7 +588,7 @@ def generate_scripts(config: dict, grounding: dict | None = None,
 
 CTA_SPOKEN_HI = (
     "अपनी निजी जन्मकुंडली से जुड़े सवालों के पूरे मुफ़्त जवाब के लिए "
-    "link कमेंट करें। मैं वेबसाइट लिंक reply करूँगा।"
+    "link कमेंट करें। मैं वेबसाइट लिंक भेजूँगा।"
 )
 
 RASI_HINDI = {
