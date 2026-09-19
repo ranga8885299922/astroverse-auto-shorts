@@ -92,7 +92,7 @@ def main():
     # exit without rendering or posting anything.
     if os.environ.get("VERIFY_LLM", "").strip().lower() == "true":
         from generate_script import _llm_model, _use_gemini
-        from tts_audio import synthesize, _duration, _bundled_ffmpeg
+        from tts_audio import _duration, _bundled_ffmpeg   # synthesize is imported at module top
         print(f"\n  [VERIFY] provider: {'GEMINI' if _use_gemini() else 'GROQ'} | model: {_llm_model()}")
         vcfg = dict(config); vcfg["signs"] = ["Aries", "Leo"]
         vitems = generate_scripts(vcfg, None, None)
