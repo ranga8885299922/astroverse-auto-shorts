@@ -304,7 +304,7 @@ def _build_transit_block(t: dict) -> str:
 # fallbacks — so one provider's outage (e.g. a Gemini 503 high-demand spike,
 # which failed the whole Oct-2 run) can no longer fail the run; another provider
 # covers that sign. Primary = LLM_PROVIDER if set, else default order below.
-_PROVIDER_DEFAULT_ORDER = ("deepseek", "gemini", "groq")
+_PROVIDER_DEFAULT_ORDER = ("gemini", "deepseek", "groq")
 
 
 def _provider_specs() -> dict:
