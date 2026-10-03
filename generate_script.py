@@ -296,39 +296,78 @@ def _build_transit_block(t: dict) -> str:
     return "\n".join(lines)
 
 
-# ── LLM provider ─────────────────────────────────────────────────────────────
-# Groq by default; Gemini when a Gemini key is present. Gemini is reached via its
-# OpenAI-compatible endpoint so the Groq-style .chat.completions.create calls
-# below need no change. Provider is picked by LLM_PROVIDER (gemini/groq) or,
-# unset, by whether GEMINI_API_KEY/GOOGLE_API_KEY is set — so simply adding the
-# secret switches the pipeline to Gemini, and removing it falls back to Groq.
+# ── LLM providers ────────────────────────────────────────────────────────────
+# Supports Gemini, DeepSeek and Groq — all through the OpenAI-compatible
+# chat.completions API (Groq via its own client), so the calls below are
+# identical for every provider. Each provider is enabled simply by its API key.
+# generate_scripts tries them in a PRIORITY CHAIN per sign — primary first, then
+# fallbacks — so one provider's outage (e.g. a Gemini 503 high-demand spike,
+# which failed the whole Oct-2 run) can no longer fail the run; another provider
+# covers that sign. Primary = LLM_PROVIDER if set, else default order below.
+_PROVIDER_DEFAULT_ORDER = ("deepseek", "gemini", "groq")
+
+
+def _provider_specs() -> dict:
+    """{name: (make_client, model)} for every provider whose API key is set."""
+    specs = {}
+    gkey = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if gkey:
+        from openai import OpenAI
+        specs["gemini"] = (
+            lambda: OpenAI(api_key=gkey,
+                           base_url="https://generativelanguage.googleapis.com/v1beta/openai/"),
+            os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"))
+    dkey = os.environ.get("DEEPSEEK_API_KEY")
+    if dkey:
+        from openai import OpenAI
+        specs["deepseek"] = (
+            lambda: OpenAI(api_key=dkey, base_url="https://api.deepseek.com"),
+            os.environ.get("DEEPSEEK_MODEL", "deepseek-chat"))
+    if os.environ.get("GROQ_API_KEY"):
+        specs["groq"] = (
+            lambda: Groq(api_key=os.environ["GROQ_API_KEY"]),
+            os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b"))
+    return specs
+
+
+def _provider_order() -> list:
+    """Provider names, primary first: LLM_PROVIDER (if available) then defaults."""
+    specs = _provider_specs()
+    want = os.environ.get("LLM_PROVIDER", "").strip().lower()
+    order = [want] if want in specs else []
+    for p in _PROVIDER_DEFAULT_ORDER:
+        if p in specs and p not in order:
+            order.append(p)
+    return order
+
+
+def _provider_chain() -> list:
+    """Ordered [(name, client, model)] to try per sign (primary, then fallbacks)."""
+    specs = _provider_specs()
+    return [(name, specs[name][0](), specs[name][1]) for name in _provider_order()]
+
+
+# Primary-provider helpers (first in the chain) — used by the Hindi path and the
+# verify mode, which want a single client/model rather than the whole chain.
 def _use_gemini() -> bool:
-    p = os.environ.get("LLM_PROVIDER", "").strip().lower()
-    if p == "gemini":
-        return True
-    if p == "groq":
-        return False
-    return bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+    order = _provider_order()
+    return bool(order) and order[0] == "gemini"
 
 
 def _llm_model() -> str:
-    if _use_gemini():
-        return os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-    return os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
+    specs = _provider_specs()
+    order = _provider_order()
+    return specs[order[0]][1] if order else os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 
 def _llm_client():
-    if _use_gemini():
-        from openai import OpenAI
-        return OpenAI(
-            api_key=os.environ.get("GEMINI_API_KEY") or os.environ["GOOGLE_API_KEY"],
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        )
-    return Groq(api_key=os.environ["GROQ_API_KEY"])
+    specs = _provider_specs()
+    order = _provider_order()
+    return specs[order[0]][0]() if order else Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
 def _call_groq(client, sign, languages, theme, tone, grounding=None,
-               top_hooks=None, transit=None) -> list[dict]:
+               top_hooks=None, transit=None, model_override=None) -> list[dict]:
     today, date_short, weekday_te = _get_ist_dates()
     lang        = languages[0]
     rasi_telugu = RASI_TELUGU.get(sign, sign)
@@ -416,7 +455,7 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
 
 {guidance_block}"""
 
-    model = _llm_model()
+    model = model_override or _llm_model()
     messages = [
         {
             "role": "system",
@@ -527,6 +566,15 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
                 print(f"        Rate limit, waiting 70s...")
                 time.sleep(70)
                 last_error = msg
+            elif any(s in msg for s in ("503", "502", "500", "504", "UNAVAILABLE",
+                                        "overloaded", "high demand", "temporarily",
+                                        "InternalServerError", "ServiceUnavailable")):
+                # Transient server-busy (e.g. Gemini 503 high-demand spike, which
+                # failed the whole Oct-2 run). Back off and retry the sign.
+                wait = 20 * (attempt + 1)
+                print(f"        Model busy, waiting {wait}s (attempt {attempt+1}): {msg[:70]}")
+                time.sleep(wait)
+                last_error = msg
             elif "json_validate" in msg or "Failed to validate JSON" in msg or "code: 400" in msg:
                 # Strict-JSON rejection — drop json mode next attempt, parse manually.
                 last_error = msg
@@ -540,42 +588,64 @@ FIXED FACTS for this rasi (use these EXACT values, do not invent your own):
 
 def generate_scripts(config: dict, grounding: dict | None = None,
                      top_hooks: list[str] | None = None) -> list[dict]:
-    client       = _llm_client()
+    chain        = _provider_chain()
+    if not chain:
+        raise RuntimeError("No LLM provider key set (need DEEPSEEK_API_KEY, "
+                           "GEMINI_API_KEY or GROQ_API_KEY)")
+    print("  🤖 LLM chain: " + " -> ".join(f"{n}({m})" for n, _, m in chain))
     signs        = config["signs"]
     languages    = config["languages"]
     theme        = config["daily_theme"]
     tone         = config["tone"]
 
-    # Astroloz engine: compute the real transits, let Groq only phrase them.
-    # Flip config "use_astroloz_engine" to false to fall back to Groq-only.
+    # Astroloz engine: compute the real transits, let the model only phrase them.
+    # Flip config "use_astroloz_engine" to false to skip the transit grounding.
     use_engine = config.get("use_astroloz_engine", True)
     date_iso   = _ist_tomorrow().date().isoformat()
     if use_engine:
         print(f"  🪐 Astroloz transit engine ON — grounding on computed gochara "
               f"for {date_iso} ({ASTROLOZ_API_URL})")
     else:
-        print("  🪐 Astroloz transit engine OFF (use_astroloz_engine=false) — Groq-only")
+        print("  🪐 Astroloz transit engine OFF (use_astroloz_engine=false)")
 
     all_scripts = []
     engine_used = 0
+    skipped     = []
     for i, sign in enumerate(signs, 1):
         print(f"  → Sign {i}/{len(signs)}: {sign}...")
         transit = fetch_daily_transit(sign, date_iso) if use_engine else None
         if transit:
             engine_used += 1
         sign_grounding = grounding.get(sign) if grounding else None
-        results = _call_groq(client, sign, languages, theme, tone,
-                             sign_grounding, top_hooks, transit)
-        all_scripts.extend(results)
+        # Try each provider in the chain; a provider outage on one sign falls
+        # through to the next, so the run never dies on a single failure.
+        results = None
+        for name, client, model in chain:
+            try:
+                results = _call_groq(client, sign, languages, theme, tone,
+                                     sign_grounding, top_hooks, transit,
+                                     model_override=model)
+                if name != chain[0][0]:
+                    print(f"      ↳ {sign} generated via fallback provider: {name}")
+                break
+            except Exception as e:
+                print(f"      ⚠ {name} failed for {sign}: {str(e)[:90]}")
+        if results:
+            all_scripts.extend(results)
+        else:
+            skipped.append(sign)
+            print(f"      ✗ {sign}: all providers failed — skipping this sign")
         if i < len(signs):
             time.sleep(4)
 
+    if skipped:
+        print(f"  ⚠ skipped {len(skipped)}/{len(signs)} sign(s): {', '.join(skipped)}")
+
     if use_engine:
-        print(f"  ✓ Groq returned {len(all_scripts)} scripts total "
-              f"({engine_used}/{len(signs)} grounded on the transit engine, "
-              f"{len(signs) - engine_used} via Groq-only fallback)")
+        print(f"  ✓ {len(all_scripts)} scripts generated "
+              f"({engine_used}/{len(signs)} grounded on the transit engine)")
     else:
-        print(f"  ✓ Groq returned {len(all_scripts)} scripts total")
+        print(f"  ✓ {len(all_scripts)} scripts generated")
     return all_scripts
 
 
@@ -638,7 +708,7 @@ def _fix_weekday_hi(text: str, correct_day: str) -> str:
     return "".join(out)
 
 
-def _call_groq_hindi(client, sign, theme, tone) -> list[dict]:
+def _call_groq_hindi(client, sign, theme, tone, model_override=None) -> list[dict]:
     today, date_short, _ = _get_ist_dates()
     tomorrow   = _ist_tomorrow()   # same frozen date as Telugu — immune to midnight crossing
     weekday_hi = HINDI_WEEKDAY[tomorrow.weekday()]
@@ -683,7 +753,7 @@ Every prediction must be SPECIFIC and ORIGINAL to {rasi_hi} today. The notes bel
 - LOVE/FAMILY: a specific person/event (spouse, child's news, a parent, an old friend, a proposal) — vary it.
 Make it feel personally written by a real astrologer reading THIS rasi's chart, not a template."""
 
-    model = _llm_model()
+    model = model_override or _llm_model()
     messages = [
         {"role": "system",
          "content": "Expert Vedic astrologer with 30 years of practice. Write ALL content in pure Hindi (Devanagari) unicode script. Every prediction must be SPECIFIC with concrete details. NEVER generic one-liners. Return ONLY raw JSON starting with { ending with }. No markdown."},
@@ -760,6 +830,12 @@ Make it feel personally written by a real astrologer reading THIS rasi's chart, 
             msg = str(e)
             if "429" in msg:
                 time.sleep(70); last_error = msg
+            elif any(s in msg for s in ("503", "502", "500", "504", "UNAVAILABLE",
+                                        "overloaded", "high demand", "temporarily",
+                                        "InternalServerError", "ServiceUnavailable")):
+                wait = 20 * (attempt + 1)
+                print(f"        Model busy, waiting {wait}s (attempt {attempt+1})")
+                time.sleep(wait); last_error = msg
             elif "json_validate" in msg or "Failed to validate JSON" in msg or "code: 400" in msg:
                 last_error = msg
                 print(f"        Attempt {attempt+1}: strict-JSON rejected, retrying in plain mode")

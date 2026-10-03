@@ -91,9 +91,10 @@ def main():
     # generates cleanly in CI (e.g. after adding the GEMINI_API_KEY secret), then
     # exit without rendering or posting anything.
     if os.environ.get("VERIFY_LLM", "").strip().lower() == "true":
-        from generate_script import _llm_model, _use_gemini
+        from generate_script import _provider_chain
         from tts_audio import _duration, _bundled_ffmpeg   # synthesize is imported at module top
-        print(f"\n  [VERIFY] provider: {'GEMINI' if _use_gemini() else 'GROQ'} | model: {_llm_model()}")
+        _chain = _provider_chain()
+        print("\n  [VERIFY] LLM chain: " + " -> ".join(f"{n}({m})" for n, _c, m in _chain))
         vcfg = dict(config); vcfg["signs"] = ["Aries", "Leo"]
         vitems = generate_scripts(vcfg, None, None)
         ff = _bundled_ffmpeg()

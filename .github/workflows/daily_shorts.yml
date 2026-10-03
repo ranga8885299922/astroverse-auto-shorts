@@ -80,6 +80,11 @@ jobs:
           # repo variables override the model / force a provider.
           GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL:         ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+          # DeepSeek — when this secret is set it joins the provider chain (and,
+          # per the default order, becomes primary). generate_scripts falls over
+          # to the next provider per sign, so a 503 spike can't fail the run.
+          DEEPSEEK_API_KEY:     ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_MODEL:       ${{ vars.DEEPSEEK_MODEL || 'deepseek-chat' }}
           LLM_PROVIDER:         ${{ vars.LLM_PROVIDER }}
           # BPHS grounding (Parashara rules DB) — optional, skipped if unset
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
