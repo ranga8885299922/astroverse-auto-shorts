@@ -43,5 +43,11 @@
       "astrology Telugu", "horoscope shorts", "astroloz", "astroloz.com",
       "Vedic astrology", "jyotishyam", "రాశిఫలాలు"
     ]
-  }
+  },
+  "youtube_max_uploads": 10,
+  "youtube_signs": [
+    "Scorpio", "Virgo", "Taurus", "Pisces", "Aries",
+    "Gemini", "Libra", "Capricorn", "Sagittarius", "Aquarius"
+  ],
+  "_youtube_signs_note": "Only these rashis upload to YouTube; all 12 still publish to Instagram. The channel's unverified YouTube cap is 10 uploads/day, so we send the 10 best-performing rashis and keep the rest IG-only. Seeded 2026-10-08 with the top 10 by avg Instagram views over the prior 45 days (dropped: Leo, Cancer). youtube_max_uploads is a hard safety cap enforced in code (never exceed, even if this list is longer). Empty list [] = allow all signs. To re-rank: SELECT sign, round(avg(views)) v FROM shorts_performance WHERE platform='instagram' AND publish_date >= current_date-45 GROUP BY sign ORDER BY v DESC LIMIT 10. After verifying the channel at youtube.com/verify the cap lifts — set youtube_signs to [] and youtube_max_uploads to 12 to resume all-12 on YouTube."
 }

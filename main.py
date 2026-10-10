@@ -64,6 +64,20 @@ def log_entry(row: dict):
         writer.writerow(row)
 
 
+def _is_youtube_cap(exc) -> bool:
+    """True when a YouTube upload failed because the channel hit its daily
+    upload limit (uploadLimitExceeded).
+
+    This is an external account cap, not a pipeline fault: the Instagram Reel
+    for the sign still published, and the only reason uploads overflow is the
+    lowered daily limit after the channel lost 'advanced features'. We treat it
+    as a deferred item (not a failure) so the run stays green and stops firing
+    'all jobs failed' alerts every night. The real fix is to raise the cap by
+    verifying the channel at youtube.com/verify."""
+    s = str(exc)
+    return "uploadLimitExceeded" in s or "exceeded the number of videos" in s
+
+
 def main():
     print("=" * 60)
     print("  🔮  ASTROVERSE AUTO-SHORTS")
@@ -196,6 +210,19 @@ def main():
     success_count = 0
     fail_count    = 0
     ig_posted     = 0
+    yt_uploaded   = 0       # successful YouTube uploads this run
+    ig_only       = 0       # Telugu items published to IG but intentionally not to YouTube
+    yt_capped     = 0       # items where YouTube's daily upload cap was hit (IG still published)
+    yt_cap_hit    = False   # once the cap is reached, skip the remaining YouTube attempts
+
+    # YouTube is capped at a daily upload limit while the channel is unverified,
+    # so we only send the best-performing rashis there; every sign still goes to
+    # Instagram. youtube_signs is the allow-list (empty = all signs); the integer
+    # youtube_max_uploads is a hard safety cap enforced regardless of the list.
+    yt_signs = set(config.get("youtube_signs") or [])          # empty set = all allowed
+    yt_max   = int(config.get("youtube_max_uploads", 0) or 0)  # 0 = no cap
+    if yt_publish and yt_signs:
+        print(f"  YouTube: top {len(yt_signs)} rashis only (cap {yt_max or 'none'}); others are Instagram-only")
 
     ig_on = ig_publish and instagram_enabled()
     if ig_publish and not instagram_enabled():
@@ -278,13 +305,49 @@ def main():
                 entry["status"] = "SUCCESS"
                 success_count += 1
                 print(f"        ✓ Telugu Reel done (YouTube skipped — Instagram-only run)")
+            elif yt_signs and sign not in yt_signs:
+                # Not in the YouTube top-rashis allow-list — Instagram only. The
+                # IG Reel already published above, so this is a success, not a
+                # skip-failure: the lower-performing rashis stay off YouTube to
+                # keep uploads under its daily cap.
+                entry["status"] = "IG_ONLY"
+                success_count += 1
+                ig_only += 1
+                print(f"        – YouTube skipped (not in top-{len(yt_signs)} YouTube rashis) — IG Reel live")
+            elif yt_max and yt_uploaded >= yt_max:
+                # Hard safety cap already reached this run — IG only from here.
+                entry["status"] = "IG_ONLY"
+                success_count += 1
+                ig_only += 1
+                print(f"        – YouTube skipped (daily cap {yt_max} reached) — IG Reel live")
+            elif yt_cap_hit:
+                # YouTube daily cap already reported by the API earlier this run —
+                # it would just 400 again. Skip the call; IG Reel is already live.
+                entry["status"] = "YT_CAPPED"
+                entry["error"] += "YouTube daily upload cap reached (uploadLimitExceeded); "
+                success_count += 1
+                yt_capped += 1
+                print(f"        ⏸ YouTube daily cap reached earlier — deferred (IG Reel already live)")
             else:
                 print(f"        → YouTube upload...")
-                vid_id = upload_video(item, video_path, config)
-                entry["status"]  = "SUCCESS"
-                entry["video_id"] = vid_id
-                success_count += 1
-                print(f"        ✓ https://youtube.com/shorts/{vid_id}")
+                try:
+                    vid_id = upload_video(item, video_path, config)
+                    entry["status"]  = "SUCCESS"
+                    entry["video_id"] = vid_id
+                    success_count += 1
+                    yt_uploaded += 1
+                    print(f"        ✓ https://youtube.com/shorts/{vid_id}")
+                except Exception as yt_err:
+                    if _is_youtube_cap(yt_err):
+                        # Daily upload limit — external cap, not a failure.
+                        yt_cap_hit = True
+                        entry["status"] = "YT_CAPPED"
+                        entry["error"] += "YouTube daily upload cap reached (uploadLimitExceeded); "
+                        success_count += 1
+                        yt_capped += 1
+                        print(f"        ⏸ YouTube daily cap reached — deferred (IG Reel already live; verify channel to raise the limit)")
+                    else:
+                        raise
 
         except Exception as e:
             entry["status"] = "FAILED"
@@ -312,10 +375,20 @@ def main():
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
     print(f"  ✅  SUCCESS : {success_count}/{total}")
+    if yt_publish:
+        yt_line = f"  📺  YOUTUBE : {yt_uploaded} uploaded"
+        if ig_only:
+            yt_line += f", {ig_only} Instagram-only (not in top-{len(yt_signs)} rashis)"
+        print(yt_line)
+    if yt_capped:
+        print(f"  ⏸  YT CAP  : {yt_capped}  (YouTube daily upload limit reached — verify the channel at youtube.com/verify to raise it)")
     print(f"  ❌  FAILED  : {fail_count}/{total}")
     print(f"  📄  Log     : {LOG_FILE}")
     print("=" * 60)
 
+    # Only genuine failures fail the run. A YouTube daily-cap hit (yt_capped)
+    # is an expected external limit — not a pipeline error — so it must not turn
+    # the workflow red or trigger 'all jobs failed' alerts.
     if fail_count > 0:
         raise SystemExit(f"{fail_count} video(s) failed — check {LOG_FILE}")
 
